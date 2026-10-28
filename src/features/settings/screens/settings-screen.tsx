@@ -112,6 +112,7 @@ export function SettingsScreen() {
       <Portal>
         <Dialog
           visible={confirmOpen}
+          style={flatStyles.dialog}
           dismissable={!loading}
           onDismiss={dismiss}
         >

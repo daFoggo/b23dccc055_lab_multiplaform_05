@@ -28,6 +28,11 @@ export const flatStyles = StyleSheet.create({
     elevation: 0,
     shadowOpacity: 0,
   },
+  // Hop thoai: Paper nhan roundness x7 (=112) thanh vien thuoc; dat ro bo 24 nhu the.
+  dialog: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: radius.card,
+  },
   // Chip/search/badge dang pill.
   pill: {borderRadius: radius.full},
 });
