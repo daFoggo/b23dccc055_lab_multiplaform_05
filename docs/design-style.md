@@ -23,7 +23,7 @@ Lõi UI là React Native Paper. Mọi tinh chỉnh phẳng chỉ nằm ở hai n
 - Chỉ tạo component riêng khi một chỉnh sửa không đạt được bằng theme hoặc style hằng số; phải ghi lý do vào mục "Ngoại lệ" bên dưới.
 - `component-styles.ts` chỉ chứa StyleSheet/hằng số, không có React component.
 - Không dùng `fontWeight`; chọn độ đậm bằng `fontFamily` (Android chọn đậm theo tên file).
-- Không đổ bóng, không viền thẻ.
+- Không đổ bóng, không viền thẻ. `Card` Paper mặc định là `elevated`: dùng `mode="contained"` (hoặc `Surface elevation={0}`) để có kiểu phẳng.
 
 ## Ngoại lệ
 

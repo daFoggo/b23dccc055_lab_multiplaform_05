@@ -21,3 +21,18 @@ test('flatStyles exposes the flat constants', () => {
   expect(flatStyles.input.borderRadius).toBe(16);
   expect(flatStyles.inputOutline.borderWidth).toBe(2);
 });
+
+test('navigationTheme fonts use Inter for every weight', () => {
+  expect(navigationTheme.fonts.regular.fontFamily).toBe('Inter_18pt-Regular');
+  expect(navigationTheme.fonts.bold.fontFamily).toBe('Inter_18pt-Bold');
+  for (const font of Object.values(navigationTheme.fonts)) {
+    expect(font.fontFamily).toMatch(/^Inter_18pt-/);
+    expect(font.fontWeight).toBe('normal');
+  }
+});
+
+test('every paperTheme font is Inter', () => {
+  for (const font of Object.values(paperTheme.fonts)) {
+    expect(font.fontFamily).toMatch(/^Inter_18pt-/);
+  }
+});

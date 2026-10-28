@@ -74,5 +74,11 @@ const {LightTheme} = adaptNavigationTheme({
 export const navigationTheme: NavigationTheme = {
   ...NavigationDefaultTheme,
   ...LightTheme,
-  fonts: NavigationDefaultTheme.fonts,
+  // adaptNavigationTheme khong tao fonts cho nav v7 nen dung Inter tu token.
+  fonts: {
+    regular: {fontFamily: fontFamily.regular, fontWeight: 'normal'},
+    medium: {fontFamily: fontFamily.semibold, fontWeight: 'normal'},
+    bold: {fontFamily: fontFamily.bold, fontWeight: 'normal'},
+    heavy: {fontFamily: fontFamily.bold, fontWeight: 'normal'},
+  },
 };
