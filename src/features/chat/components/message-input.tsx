@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { IconButton, Surface, TextInput, useTheme } from 'react-native-paper';
 import { icons } from '../../../theme/icons';
 import { canSend } from '../../../lib/messages';
@@ -7,7 +7,6 @@ import { MAX_MESSAGE_LENGTH } from '../../../services/chat-service';
 import {
   radius,
   spacing,
-  touchTarget,
   typography,
 } from '../../../theme/metrics';
 
@@ -15,12 +14,14 @@ type Props = {
   onSend: (text: string) => void;
   onPressLocation?: () => void;
   locating?: boolean;
+  bottomInset?: number;
 };
 
 export function MessageInput({
   onSend,
   onPressLocation,
   locating = false,
+  bottomInset = 0,
 }: Props) {
   const theme = useTheme();
   const [text, setText] = useState('');
@@ -37,14 +38,23 @@ export function MessageInput({
   return (
     <Surface
       elevation={2}
-      style={[styles.container, { backgroundColor: theme.colors.surface }]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.colors.surface,
+          paddingBottom: Math.max(bottomInset, spacing.sm),
+        },
+      ]}
     >
       {onPressLocation ? (
         <IconButton
           testID="location-button"
           icon={icons.location}
-          size={24}
-          style={styles.button}
+          size={22}
+          mode="contained-tonal"
+          containerColor={theme.colors.surfaceVariant}
+          iconColor={theme.colors.primary}
+          style={styles.actionButton}
           accessibilityLabel="Gửi vị trí"
           disabled={locating}
           loading={locating}
@@ -57,10 +67,12 @@ export function MessageInput({
         mode="outlined"
         multiline
         placeholder="Nhắn tin"
+        placeholderTextColor={theme.colors.onSurfaceVariant}
         value={text}
         onChangeText={setText}
         maxLength={MAX_MESSAGE_LENGTH}
         outlineStyle={styles.inputOutline}
+        contentStyle={styles.inputContent}
         style={[
           styles.input,
           { backgroundColor: theme.colors.surfaceVariant },
@@ -70,12 +82,12 @@ export function MessageInput({
       <IconButton
         testID="send-button"
         icon={icons.send}
-        size={24}
+        size={22}
         mode="contained"
         containerColor={theme.colors.primary}
         iconColor={theme.colors.onPrimary}
         disabled={!enabled}
-        style={styles.button}
+        style={styles.actionButton}
         accessibilityLabel="Gửi"
         onPress={submit}
       />
@@ -91,17 +103,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
+    paddingTop: spacing.sm,
+    gap: spacing.sm,
   },
   input: {
     flex: 1,
     maxHeight: MAX_INPUT_HEIGHT,
-    minHeight: touchTarget,
+    minHeight: 44,
   },
   inputOutline: {
     borderRadius: radius.extraLarge,
     borderColor: 'transparent',
   },
-  button: { width: touchTarget, height: touchTarget, margin: 0 },
+  inputContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: Platform.OS === 'ios' ? 8 : 6,
+    paddingBottom: Platform.OS === 'ios' ? 8 : 6,
+  },
+  actionButton: {
+    width: 44,
+    height: 44,
+    margin: 0,
+  },
 });
