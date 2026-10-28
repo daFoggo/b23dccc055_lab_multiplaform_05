@@ -22,31 +22,48 @@ export async function setOffline(uid: string): Promise<void> {
 // logout is responsible for calling setOffline.
 export function startPresence(uid: string): Unsubscribe {
   const userRef = ref(db, `users/${uid}`);
+  let active = true;
   let connected = false;
+  let foreground = AppState.currentState === 'active';
+
+  const writeOnline = () => {
+    const next = foreground
+      ? update(userRef, { online: true })
+      : update(userRef, { online: false, lastSeen: serverTimestamp() });
+    Promise.resolve(next).catch(() => {});
+  };
 
   const detachConnected = onValue(ref(db, '.info/connected'), snapshot => {
     connected = snapshot.val() === true;
-    if (!connected) {
+    if (!active || !connected) {
       return;
     }
+    // onDisconnect must be registered before announcing online.
     onDisconnect(userRef)
       .update({ online: false, lastSeen: serverTimestamp() })
-      .then(() => update(userRef, { online: true }))
+      .then(() => {
+        if (active && connected) {
+          writeOnline();
+        }
+      })
       .catch(() => {});
   });
 
   const appState = AppState.addEventListener('change', state => {
-    if (!connected) {
+    if (state === 'active') {
+      foreground = true;
+    } else if (state === 'background') {
+      foreground = false;
+    } else {
       return;
     }
-    const next =
-      state === 'active'
-        ? update(userRef, { online: true })
-        : update(userRef, { online: false, lastSeen: serverTimestamp() });
-    Promise.resolve(next).catch(() => {});
+    if (active && connected) {
+      writeOnline();
+    }
   });
 
   return () => {
+    active = false;
     detachConnected();
     appState.remove();
   };

@@ -100,4 +100,23 @@ describe('subscribeUsers / subscribeUser', () => {
     unsub();
     expect(detach).toHaveBeenCalled();
   });
+
+  it('forwards listener errors to onError (not after unsubscribe)', () => {
+    let errCb: (e: Error) => void = () => {};
+    (onValue as jest.Mock).mockImplementation((_r, _cb, err) => {
+      errCb = err;
+      return jest.fn();
+    });
+    const onError = jest.fn();
+    const unsub = subscribeUsers('me', jest.fn(), onError);
+    errCb(new Error('denied'));
+    expect(onError).toHaveBeenCalledTimes(1);
+    unsub();
+    errCb(new Error('again'));
+    expect(onError).toHaveBeenCalledTimes(1);
+    const onError2 = jest.fn();
+    subscribeUser('u1', jest.fn(), onError2);
+    errCb(new Error('x'));
+    expect(onError2).toHaveBeenCalledTimes(1);
+  });
 });

@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
+import { FlatList } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { ContactsScreen } from './contacts-screen';
 import { subscribeUsers } from '../../../services/user-service';
@@ -42,9 +43,13 @@ afterEach(async () => {
   current = undefined;
 });
 
-async function setup(users: unknown[]) {
-  (subscribeUsers as jest.Mock).mockImplementation((_uid, cb) => {
-    cb(users);
+async function setup(users: unknown[], fail = false) {
+  (subscribeUsers as jest.Mock).mockImplementation((_uid, cb, onError) => {
+    if (fail) {
+      onError(new Error('denied'));
+    } else {
+      cb(users);
+    }
     return jest.fn();
   });
   let r!: ReactTestRenderer.ReactTestRenderer;
@@ -89,4 +94,12 @@ it('lists contacts online first, filters, and navigates to Chat on press', async
     peerId: 'b',
     peerName: 'Bình',
   });
+});
+
+it('shows an error text when loading fails and keeps taps persistent', async () => {
+  const r = await setup([], true);
+  expect(text(r)).toContain('Không tải được danh bạ');
+  expect(r.root.findByType(FlatList).props.keyboardShouldPersistTaps).toBe(
+    'handled',
+  );
 });

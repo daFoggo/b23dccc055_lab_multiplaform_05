@@ -25,3 +25,13 @@ test('sortContacts puts online first then sorts by name (vi)', () => {
   ]);
   expect(sorted.map(x => x.uid)).toEqual(['4', '2', '3', '1']);
 });
+
+test('sortContacts orders accents and Đ explicitly (Node ICU vi collation)', () => {
+  const names = (list: UserProfile[]) => sortContacts(list).map(x => x.name);
+  expect(names([u('1', 'Ân'), u('2', 'An')])).toEqual(['An', 'Ân']);
+  expect(names([u('1', 'Đào'), u('2', 'Dao'), u('3', 'Em')])).toEqual([
+    'Dao',
+    'Đào',
+    'Em',
+  ]);
+});

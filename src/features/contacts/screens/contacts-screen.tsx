@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NavigationProp } from '@react-navigation/native';
 import { Avatar, List, Searchbar, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/auth-context';
@@ -15,7 +15,7 @@ import { spacing, touchTarget } from '../../../theme/metrics';
 import type { RootStackParamList } from '../../../navigation/types';
 import type { UserProfile } from '../../../services/types';
 
-type Nav = NativeStackNavigationProp<RootStackParamList>;
+type Nav = NavigationProp<RootStackParamList>;
 
 const AVATAR_SIZE = 48;
 
@@ -51,8 +51,14 @@ export function ContactsScreen() {
   const theme = useTheme();
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const { users, loading } = useUsers(user?.uid ?? '');
+  const { users, loading, error } = useUsers(user?.uid ?? '');
   const [query, setQuery] = useState('');
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, []);
 
   const data = useMemo(
     () => sortContacts(filterUsers(users, query)),
@@ -63,9 +69,7 @@ export function ContactsScreen() {
     <List.Item
       testID={`contact-${item.uid}`}
       title={item.name}
-      description={
-        item.online ? 'online' : formatLastSeen(item.lastSeen, Date.now())
-      }
+      description={item.online ? 'online' : formatLastSeen(item.lastSeen, now)}
       descriptionStyle={
         item.online
           ? { color: colors.online }
@@ -79,7 +83,9 @@ export function ContactsScreen() {
     />
   );
 
-  const emptyText = query.trim()
+  const emptyText = error
+    ? error
+    : query.trim()
     ? 'Không tìm thấy kết quả'
     : 'Chưa có ai khác đăng ký';
 
@@ -100,6 +106,7 @@ export function ContactsScreen() {
         data={data}
         keyExtractor={item => item.uid}
         renderItem={renderItem}
+        keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           <Text
             testID="contacts-empty"
