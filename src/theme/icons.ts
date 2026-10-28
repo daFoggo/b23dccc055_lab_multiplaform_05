@@ -14,4 +14,9 @@ export const icons = {
   close: 'close',
   back: 'arrow-left',
   check: 'check',
+  info: 'information-outline',
+  logout: 'logout',
+  notifWelcome: 'hand-wave-outline',
+  notifTip: 'lightbulb-outline',
+  notifSecurity: 'shield-check-outline',
 } as const;

@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
-import { PaperProvider } from 'react-native-paper';
+import { ActivityIndicator, PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { RootNavigator } from '../src/navigation/root-navigator';
@@ -73,9 +73,61 @@ test('signed-in user sees four tab labels', async () => {
   }
 });
 
-test('initializing shows no login screen', async () => {
+const tree = (r: ReactTestRenderer.ReactTestRenderer) =>
+  JSON.stringify(r.toJSON());
+const tabLabels = (r: ReactTestRenderer.ReactTestRenderer) =>
+  r.root.findAll(
+    n =>
+      typeof n.type === 'string' && n.props.testID === 'bottom-navigation-bar',
+  );
+
+const wrap = () => (
+  <SafeAreaProvider
+    initialMetrics={{
+      frame: { x: 0, y: 0, width: 360, height: 640 },
+      insets: { top: 0, left: 0, right: 0, bottom: 0 },
+    }}
+  >
+    <PaperProvider>
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
+    </PaperProvider>
+  </SafeAreaProvider>
+);
+
+test('initializing shows spinner, no login and no tab bar', async () => {
   mockUseAuth.mockReturnValue({ user: null, initializing: true });
-  expect(await render()).not.toContain('Đăng nhập');
+  let r!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    r = ReactTestRenderer.create(wrap());
+  });
+  expect(r.root.findAllByType(ActivityIndicator)).toHaveLength(1);
+  expect(tree(r)).not.toContain('Đăng nhập');
+  expect(tabLabels(r)).toHaveLength(0);
+  await act(async () => r.unmount());
+});
+
+test('logout transition: tabs -> login after user becomes null', async () => {
+  mockUseAuth.mockReturnValue({
+    user: { uid: 'u1', name: 'A', email: 'a@b.c' },
+    initializing: false,
+  });
+  let r!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    r = ReactTestRenderer.create(wrap());
+  });
+  expect(tabLabels(r).length).toBeGreaterThan(0);
+  expect(tree(r)).not.toContain('Đăng nhập');
+
+  mockUseAuth.mockReturnValue({ user: null, initializing: false });
+  await act(async () => {
+    r.update(wrap());
+  });
+  expect(tree(r)).toContain('Đăng nhập');
+  expect(tabLabels(r)).toHaveLength(0);
+  expect(tree(r)).not.toContain('Danh bạ');
+  await act(async () => r.unmount());
 });
 
 test('tab badge follows total unread (3 then 0)', async () => {
