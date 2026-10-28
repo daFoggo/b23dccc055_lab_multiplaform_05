@@ -1,13 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
-  Platform,
   StyleSheet,
   View,
 } from 'react-native';
-import { Avatar, Text, useTheme } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Avatar, Text, useTheme } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useAuth } from '../../auth/auth-context';
 import { MessageBubble } from '../components/message-bubble';
@@ -77,6 +84,31 @@ export function ChatScreen({ route, navigation }: Props) {
     peerName,
   );
   const peer = usePeer(peerId);
+  const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets();
+  const listRef = useRef<FlatList<ListItem>>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () =>
+      setKeyboardVisible(true),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () =>
+      setKeyboardVisible(false),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  const handleSend = useCallback(
+    (text: string) => {
+      send(text);
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    },
+    [send],
+  );
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -128,20 +160,33 @@ export function ChatScreen({ route, navigation }: Props) {
           message={item.message}
           mine={item.message.senderId === myUid}
           onRetry={retry}
+          senderName={peerName}
         />
       ),
-    [myUid, retry, theme.colors.onSurfaceVariant],
+    [myUid, retry, peerName, theme.colors.onSurfaceVariant],
   );
 
+  const bottomPad = { paddingBottom: keyboardVisible ? 0 : insets.bottom };
+
+  if (!user) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator animating />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    // Bottom inset only while the keyboard is hidden (it already covers it).
+    <View style={[styles.container, bottomPad]}>
       {/* Edge-to-edge Android ignores adjustResize, so pad on both platforms. */}
       <KeyboardAvoidingView
         style={styles.container}
         behavior="padding"
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 56 : 0}
+        keyboardVerticalOffset={headerHeight}
       >
         <FlatList
+          ref={listRef}
           testID="message-list"
           style={styles.container}
           inverted
@@ -157,14 +202,15 @@ export function ChatScreen({ route, navigation }: Props) {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.listContent}
         />
-        <MessageInput onSend={send} />
+        <MessageInput onSend={handleSend} />
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { flexDirection: 'row', alignItems: 'center' },
   headerText: { marginLeft: spacing.md, flexShrink: 1 },
   listContent: { paddingVertical: spacing.sm },

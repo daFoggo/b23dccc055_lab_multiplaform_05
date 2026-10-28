@@ -97,6 +97,16 @@ function guardError(isActive: () => boolean, onError?: (e: Error) => void) {
   };
 }
 
+// Push key for a new message; lets the UI show a pending item under the same
+// id the server message will have.
+export function newMessageId(chatId: string): string {
+  const key = push(ref(db, `chats/${chatId}/messages`)).key;
+  if (!key) {
+    throw new Error('Không tạo được mã tin nhắn');
+  }
+  return key;
+}
+
 type Payload = {
   message: Record<string, unknown>;
   lastMessage: string;
@@ -108,9 +118,14 @@ type Payload = {
 // The sender's own unread is reset to 0. The receiver's unread is then bumped
 // by a transaction AFTER the update commits; if that fails the message is
 // already delivered, so the error is swallowed (no throw out of send).
-async function send(me: Party, peer: Party, payload: Payload): Promise<void> {
+async function send(
+  me: Party,
+  peer: Party,
+  payload: Payload,
+  id?: string,
+): Promise<void> {
   const chatId = getChatId(me.uid, peer.uid);
-  const key = push(ref(db, `chats/${chatId}/messages`)).key;
+  const key = id ?? newMessageId(chatId);
   const mine = `userChats/${me.uid}/${peer.uid}`;
   const theirs = `userChats/${peer.uid}/${me.uid}`;
   await update(ref(db), {
@@ -139,6 +154,7 @@ export async function sendTextMessage(
   me: Party,
   peer: Party,
   text: string,
+  id?: string,
 ): Promise<void> {
   if (!canSend(text)) {
     throw new Error('Tin nhắn trống');
@@ -148,37 +164,48 @@ export async function sendTextMessage(
   if (trimmed.length > MAX_MESSAGE_LENGTH) {
     throw new Error(`Tin nhắn quá dài (tối đa ${MAX_MESSAGE_LENGTH} ký tự)`);
   }
-  await send(me, peer, {
-    message: {
-      senderId: me.uid,
-      type: 'text',
-      text: trimmed,
-      createdAt: serverTimestamp(),
+  await send(
+    me,
+    peer,
+    {
+      message: {
+        senderId: me.uid,
+        type: 'text',
+        text: trimmed,
+        createdAt: serverTimestamp(),
+      },
+      lastMessage: truncatePreview(trimmed),
+      lastType: 'text',
     },
-    lastMessage: truncatePreview(trimmed),
-    lastType: 'text',
-  });
+    id,
+  );
 }
 
 export async function sendLocationMessage(
   me: Party,
   peer: Party,
   coords: { lat: number; lng: number },
+  id?: string,
 ): Promise<void> {
   if (!isValidCoords(coords.lat, coords.lng)) {
     throw new Error('Vị trí không hợp lệ');
   }
-  await send(me, peer, {
-    message: {
-      senderId: me.uid,
-      type: 'location',
-      lat: coords.lat,
-      lng: coords.lng,
-      createdAt: serverTimestamp(),
+  await send(
+    me,
+    peer,
+    {
+      message: {
+        senderId: me.uid,
+        type: 'location',
+        lat: coords.lat,
+        lng: coords.lng,
+        createdAt: serverTimestamp(),
+      },
+      lastMessage: LOCATION_PREVIEW,
+      lastType: 'location',
     },
-    lastMessage: LOCATION_PREVIEW,
-    lastType: 'location',
-  });
+    id,
+  );
 }
 
 export function subscribeMessages(

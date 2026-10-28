@@ -15,6 +15,7 @@ import {
   MAX_MESSAGE_LENGTH,
   loadOlderMessages,
   markRead,
+  newMessageId,
   sendLocationMessage,
   sendTextMessage,
   subscribeConversations,
@@ -146,6 +147,25 @@ describe('send limits and preview', () => {
     );
     expect(push).not.toHaveBeenCalled();
     expect(update).not.toHaveBeenCalled();
+  });
+});
+
+describe('newMessageId / supplied id', () => {
+  it('returns the push key and throws when it is null', () => {
+    expect(newMessageId('u1_u2')).toBe('m1');
+    expect(push).toHaveBeenCalledWith({ path: 'chats/u1_u2/messages' });
+    (push as jest.Mock).mockReturnValueOnce({ key: null });
+    expect(() => newMessageId('u1_u2')).toThrow();
+  });
+
+  it('uses the supplied id as the message key without pushing', async () => {
+    await sendTextMessage(me, peer, 'hi', 'custom');
+    expect(push).not.toHaveBeenCalled();
+    const [, data] = (update as jest.Mock).mock.calls[0];
+    expect(data['chats/u1_u2/messages/custom']).toBeDefined();
+    await sendLocationMessage(me, peer, { lat: 1, lng: 2 }, 'loc1');
+    const [, data2] = (update as jest.Mock).mock.calls[1];
+    expect(data2['chats/u1_u2/messages/loc1']).toBeDefined();
   });
 });
 

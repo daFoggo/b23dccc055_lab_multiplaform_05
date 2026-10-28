@@ -4,7 +4,12 @@ import { IconButton, TextInput } from 'react-native-paper';
 import { canSend } from '../../../lib/messages';
 import { MAX_MESSAGE_LENGTH } from '../../../services/chat-service';
 import { colors } from '../../../theme/colors';
-import { radius, spacing, touchTarget } from '../../../theme/metrics';
+import {
+  radius,
+  spacing,
+  touchTarget,
+  typography,
+} from '../../../theme/metrics';
 
 type Props = {
   onSend: (text: string) => void;
@@ -37,6 +42,7 @@ export function MessageInput({ onSend, onPressLocation }: Props) {
       ) : null}
       <TextInput
         testID="message-input"
+        accessibilityLabel="Nhập tin nhắn"
         mode="flat"
         multiline
         placeholder="Nhắn tin"
@@ -65,8 +71,8 @@ export function MessageInput({ onSend, onPressLocation }: Props) {
   );
 }
 
-// 4 lines of bodyLarge (24dp line height) plus vertical padding.
-const MAX_INPUT_HEIGHT = 24 * 4 + spacing.lg;
+// 4 lines of bodyLarge plus vertical padding.
+const MAX_INPUT_HEIGHT = typography.bodyLarge.lineHeight * 4 + spacing.lg;
 
 const styles = StyleSheet.create({
   container: {

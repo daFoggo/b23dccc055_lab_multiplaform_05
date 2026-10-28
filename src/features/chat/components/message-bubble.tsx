@@ -10,9 +10,15 @@ type Props = {
   message: ChatMessage;
   mine: boolean;
   onRetry?: (id: string) => void;
+  senderName?: string;
 };
 
-export function MessageBubble({ message, mine, onRetry }: Props) {
+export function MessageBubble({
+  message,
+  mine,
+  onRetry,
+  senderName = '',
+}: Props) {
   const theme = useTheme();
   const failed = message.failed === true;
   const background = failed
@@ -26,12 +32,20 @@ export function MessageBubble({ message, mine, onRetry }: Props) {
     ? colors.onBubbleMine
     : colors.onBubbleOther;
 
+  const wrapped = failed && onRetry !== undefined;
+  const label = `${mine ? 'Tôi' : senderName}, ${formatTime(
+    message.createdAt,
+  )}, ${message.text ?? ''}`;
+
   const body = (
     <Surface
       testID={`bubble-${message.id}`}
       elevation={0}
+      accessible
+      accessibilityLabel={label}
       style={[
         styles.bubble,
+        wrapped ? styles.fill : null,
         mine ? styles.bubbleMine : styles.bubbleOther,
         { backgroundColor: background },
         message.pending ? styles.pending : null,
@@ -47,7 +61,9 @@ export function MessageBubble({ message, mine, onRetry }: Props) {
           </Text>
         ) : null}
         {message.pending ? (
-          <Icon source="clock-outline" size={12} color={foreground} />
+          <View accessible accessibilityLabel="Đang gửi">
+            <Icon source="clock-outline" size={12} color={foreground} />
+          </View>
         ) : (
           <Text variant="bodySmall" style={{ color: foreground }}>
             {formatTime(message.createdAt)}
@@ -62,7 +78,7 @@ export function MessageBubble({ message, mine, onRetry }: Props) {
       testID={`row-${message.id}`}
       style={[styles.row, mine ? styles.rowMine : styles.rowOther]}
     >
-      {failed && onRetry ? (
+      {wrapped ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Gửi lại"
@@ -96,6 +112,7 @@ const styles = StyleSheet.create({
   // Telegram-style tail: smaller radius on the sender's bottom corner.
   bubbleMine: { borderBottomRightRadius: radius.extraSmall },
   bubbleOther: { borderBottomLeftRadius: radius.extraSmall },
+  fill: { maxWidth: '100%' },
   pending: { opacity: 0.6 },
   meta: {
     flexDirection: 'row',

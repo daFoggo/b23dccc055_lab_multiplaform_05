@@ -48,7 +48,11 @@ it('aligns the other bubble left with the other colour', async () => {
 it('shows the retry label for a failed message and retries on press', async () => {
   const onRetry = jest.fn();
   const r = await render(
-    <MessageBubble message={{ ...base, failed: true }} mine onRetry={onRetry} />,
+    <MessageBubble
+      message={{ ...base, failed: true }}
+      mine
+      onRetry={onRetry}
+    />,
   );
   expect(JSON.stringify(r.toJSON())).toContain('Gửi lại');
   const btn = r.root.findAllByProps({ accessibilityLabel: 'Gửi lại' })[0];

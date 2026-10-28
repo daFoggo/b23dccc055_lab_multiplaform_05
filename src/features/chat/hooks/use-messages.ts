@@ -1,7 +1,9 @@
+import { AppState } from 'react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   loadOlderMessages,
   markRead,
+  newMessageId,
   sendTextMessage,
   subscribeMessages,
 } from '../../../services/chat-service';
@@ -10,9 +12,9 @@ import type { ChatMessage } from '../../../services/types';
 
 const INITIAL_LIMIT = 50;
 const PAGE_SIZE = 30;
-// A server echo of our own send is matched to its pending item when it is
-// not older than the pending item (minus a little clock skew).
-const ECHO_SKEW_MS = 5000;
+
+const isForeground = (state: string) =>
+  state !== 'background' && state !== 'inactive';
 
 const byTime = (a: ChatMessage, b: ChatMessage) =>
   a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -28,23 +30,40 @@ export function useMessages(
   const [older, setOlder] = useState<ChatMessage[]>([]);
   const [pending, setPending] = useState<ChatMessage[]>([]);
   const mounted = useRef(true);
-  const counter = useRef(0);
   const loadingOlder = useRef(false);
   const exhausted = useRef(false);
   const readFor = useRef<string | null | undefined>(undefined);
 
+  const pendingRef = useRef<ChatMessage[]>([]);
+  pendingRef.current = pending;
+  const [foreground, setForeground] = useState(() =>
+    isForeground(AppState.currentState ?? 'active'),
+  );
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state =>
+      setForeground(isForeground(state)),
+    );
+    return () => sub.remove();
+  }, []);
+
   useEffect(() => {
     mounted.current = true;
+    if (!myUid) {
+      return undefined;
+    }
+    let active = true;
     const unsubscribe = subscribeMessages(chatId, INITIAL_LIMIT, messages => {
-      if (mounted.current) {
+      if (active) {
         setLive(messages);
       }
     });
     return () => {
+      active = false;
       mounted.current = false;
       unsubscribe();
     };
-  }, [chatId]);
+  }, [chatId, myUid]);
 
   const server = useMemo(() => {
     const map = new Map<string, ChatMessage>();
@@ -68,36 +87,27 @@ export function useMessages(
   }, [server, peerId]);
 
   useEffect(() => {
-    if (readFor.current === latestPeerId) {
+    if (!myUid || !foreground || readFor.current === latestPeerId) {
       return;
     }
     readFor.current = latestPeerId;
     markRead(myUid, peerId).catch(() => {});
-  }, [latestPeerId, myUid, peerId]);
+  }, [latestPeerId, myUid, peerId, foreground]);
 
+  // A pending item is shown until the server message with the same id arrives.
   const items = useMemo(() => {
-    // Hide pending items already echoed by the server (one-to-one match).
-    const unmatched = new Set(pending.map(p => p.id));
-    const mine = server.filter(m => m.senderId === myUid);
-    const used = new Set<string>();
-    for (const p of pending) {
-      if (p.failed) {
-        continue;
-      }
-      const echo = mine.find(
-        m =>
-          !used.has(m.id) &&
-          m.text === p.text &&
-          m.createdAt >= p.createdAt - ECHO_SKEW_MS,
-      );
-      if (echo) {
-        used.add(echo.id);
-        unmatched.delete(p.id);
-      }
-    }
-    const visible = pending.filter(p => unmatched.has(p.id));
+    const ids = new Set(server.map(m => m.id));
+    const visible = pending.filter(p => !ids.has(p.id));
     return groupByDay([...server, ...visible], Date.now());
-  }, [server, pending, myUid]);
+  }, [server, pending]);
+
+  // Prune pending items that the server has already echoed.
+  useEffect(() => {
+    const ids = new Set(server.map(m => m.id));
+    if (pendingRef.current.some(p => ids.has(p.id))) {
+      setPending(prev => prev.filter(p => !ids.has(p.id)));
+    }
+  }, [server]);
 
   const loadOlder = useCallback(async () => {
     if (loadingOlder.current || exhausted.current || server.length === 0) {
@@ -127,22 +137,20 @@ export function useMessages(
   }, [chatId, server]);
 
   const deliver = useCallback(
-    async (localId: string, text: string) => {
+    async (id: string, text: string) => {
       try {
         await sendTextMessage(
           { uid: myUid, name: myName },
           { uid: peerId, name: peerName },
           text,
+          id,
         );
-        // The realtime listener delivers the real message; drop the local one.
-        if (mounted.current) {
-          setPending(prev => prev.filter(p => p.id !== localId));
-        }
+        // Keep the pending row; the realtime echo (same id) replaces it.
       } catch {
         if (mounted.current) {
           setPending(prev =>
             prev.map(p =>
-              p.id === localId ? { ...p, pending: false, failed: true } : p,
+              p.id === id ? { ...p, pending: false, failed: true } : p,
             ),
           );
         }
@@ -153,16 +161,20 @@ export function useMessages(
 
   const send = useCallback(
     async (text: string) => {
-      if (!canSend(text)) {
+      if (!myUid || !canSend(text)) {
         return;
       }
       const trimmed = text.trim();
-      counter.current += 1;
-      const localId = `local-${counter.current}`;
+      let id: string;
+      try {
+        id = newMessageId(chatId);
+      } catch {
+        return;
+      }
       setPending(prev => [
         ...prev,
         {
-          id: localId,
+          id,
           senderId: myUid,
           type: 'text',
           text: trimmed,
@@ -170,27 +182,25 @@ export function useMessages(
           pending: true,
         },
       ]);
-      await deliver(localId, trimmed);
+      await deliver(id, trimmed);
     },
-    [myUid, deliver],
+    [chatId, myUid, deliver],
   );
 
   const retry = useCallback(
-    async (localId: string) => {
-      const target = pending.find(p => p.id === localId && p.failed);
+    async (id: string) => {
+      const target = pendingRef.current.find(p => p.id === id && p.failed);
       if (!target || target.text === undefined) {
         return;
       }
       setPending(prev =>
         prev.map(p =>
-          p.id === localId
-            ? { ...p, pending: true, failed: false, createdAt: Date.now() }
-            : p,
+          p.id === id ? { ...p, pending: true, failed: false } : p,
         ),
       );
-      await deliver(localId, target.text);
+      await deliver(id, target.text);
     },
-    [pending, deliver],
+    [deliver],
   );
 
   return { items, loadOlder, send, retry };
