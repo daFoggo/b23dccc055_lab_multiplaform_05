@@ -15,16 +15,17 @@ const UNAVAILABLE_MESSAGE = 'Không lấy được vị trí';
 let configured = false;
 
 async function ensureAndroidPermission(): Promise<void> {
-  const result = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-    {
-      title: 'Quyền truy cập vị trí',
-      message: 'Ứng dụng cần vị trí của bạn để gửi cho người đang trò chuyện.',
-      buttonPositive: 'Đồng ý',
-      buttonNegative: 'Từ chối',
-    },
-  );
-  if (result !== PermissionsAndroid.RESULTS.GRANTED) {
+  const { PERMISSIONS, RESULTS } = PermissionsAndroid;
+  // Android 12+ lets the user pick "approximate" (coarse only): accept either.
+  // requestMultiple has no rationale dialog; the system prompt is shown.
+  const result = await PermissionsAndroid.requestMultiple([
+    PERMISSIONS.ACCESS_FINE_LOCATION,
+    PERMISSIONS.ACCESS_COARSE_LOCATION,
+  ]);
+  const granted =
+    result[PERMISSIONS.ACCESS_FINE_LOCATION] === RESULTS.GRANTED ||
+    result[PERMISSIONS.ACCESS_COARSE_LOCATION] === RESULTS.GRANTED;
+  if (!granted) {
     throw new LocationPermissionError();
   }
 }
@@ -50,15 +51,18 @@ function ensureIosAuthorization(): Promise<void> {
   });
 }
 
-export async function getCurrentCoords(): Promise<{
-  lat: number;
-  lng: number;
-}> {
-  if (Platform.OS === 'android') {
-    await ensureAndroidPermission();
-  } else {
-    await ensureIosAuthorization();
-  }
+const POSITION_UNAVAILABLE = 2;
+const TIMEOUT = 3;
+
+class PositionError {
+  constructor(readonly cause: Error, readonly retryable: boolean) {}
+}
+
+function readPosition(options: {
+  enableHighAccuracy: boolean;
+  timeout: number;
+  maximumAge: number;
+}): Promise<{ lat: number; lng: number }> {
   return new Promise((resolve, reject) => {
     Geolocation.getCurrentPosition(
       position =>
@@ -69,10 +73,42 @@ export async function getCurrentCoords(): Promise<{
       error =>
         reject(
           error?.code === PERMISSION_DENIED
-            ? new LocationPermissionError()
-            : new Error(UNAVAILABLE_MESSAGE),
+            ? new PositionError(new LocationPermissionError(), false)
+            : new PositionError(
+                new Error(UNAVAILABLE_MESSAGE),
+                error?.code === POSITION_UNAVAILABLE || error?.code === TIMEOUT,
+              ),
         ),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+      options,
     );
   });
+}
+
+export async function getCurrentCoords(): Promise<{
+  lat: number;
+  lng: number;
+}> {
+  if (Platform.OS === 'android') {
+    await ensureAndroidPermission();
+  } else {
+    await ensureIosAuthorization();
+  }
+  try {
+    return await readPosition({
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 10000,
+    });
+  } catch (e) {
+    if (e instanceof PositionError && e.retryable) {
+      return readPosition({
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 10000,
+      }).catch(err => {
+        throw err instanceof PositionError ? err.cause : err;
+      });
+    }
+    throw e instanceof PositionError ? e.cause : e;
+  }
 }

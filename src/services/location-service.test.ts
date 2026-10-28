@@ -21,14 +21,18 @@ const setOS = (os: 'android' | 'ios') => {
   (Platform as { OS: string }).OS = os;
 };
 
+const FINE = 'android.permission.ACCESS_FINE_LOCATION';
+const COARSE = 'android.permission.ACCESS_COARSE_LOCATION';
 let requestSpy: jest.SpyInstance;
+const grants = (fine: string, coarse: string) =>
+  requestSpy.mockResolvedValue({ [FINE]: fine, [COARSE]: coarse } as never);
 
 beforeEach(() => {
   jest.clearAllMocks();
   setOS('android');
   requestSpy = jest
-    .spyOn(PermissionsAndroid, 'request')
-    .mockResolvedValue('granted' as never);
+    .spyOn(PermissionsAndroid, 'requestMultiple')
+    .mockResolvedValue({ [FINE]: 'granted', [COARSE]: 'granted' } as never);
   geo.requestAuthorization.mockImplementation((ok: () => void) => ok());
   geo.getCurrentPosition.mockImplementation((ok: (p: unknown) => void) =>
     ok({ coords: { latitude: 21.03, longitude: 105.85 } }),
@@ -41,7 +45,7 @@ afterEach(() => {
 });
 
 it('throws LocationPermissionError when permission is denied', async () => {
-  requestSpy.mockResolvedValue('denied' as never);
+  grants('denied', 'denied');
   await expect(getCurrentCoords()).rejects.toBeInstanceOf(
     LocationPermissionError,
   );
@@ -49,26 +53,58 @@ it('throws LocationPermissionError when permission is denied', async () => {
 });
 
 it('throws LocationPermissionError on never_ask_again', async () => {
-  requestSpy.mockResolvedValue('never_ask_again' as never);
+  grants('never_ask_again', 'denied');
   await expect(getCurrentCoords()).rejects.toBeInstanceOf(
     LocationPermissionError,
   );
 });
 
-it('returns coordinates when granted, with a Vietnamese rationale and options', async () => {
+it('requests both fine and coarse permissions and returns coordinates', async () => {
   await expect(getCurrentCoords()).resolves.toEqual({
     lat: 21.03,
     lng: 105.85,
   });
-  expect(requestSpy.mock.calls[0][0]).toBe(
-    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-  );
-  expect(requestSpy.mock.calls[0][1].message).toMatch(/vị trí/i);
+  expect(requestSpy.mock.calls[0][0]).toEqual([FINE, COARSE]);
   expect(geo.getCurrentPosition.mock.calls[0][2]).toEqual({
     enableHighAccuracy: true,
     timeout: 15000,
     maximumAge: 10000,
   });
+});
+
+it('treats approximate-only (coarse granted) as granted', async () => {
+  grants('denied', 'granted');
+  await expect(getCurrentCoords()).resolves.toEqual({
+    lat: 21.03,
+    lng: 105.85,
+  });
+});
+
+it('retries once with low accuracy when high accuracy times out', async () => {
+  geo.getCurrentPosition
+    .mockImplementationOnce((_ok: unknown, err: (e: unknown) => void) =>
+      err({ code: 3, message: 'timeout' }),
+    )
+    .mockImplementationOnce((ok: (p: unknown) => void) =>
+      ok({ coords: { latitude: 1, longitude: 2 } }),
+    );
+  await expect(getCurrentCoords()).resolves.toEqual({ lat: 1, lng: 2 });
+  expect(geo.getCurrentPosition).toHaveBeenCalledTimes(2);
+  expect(geo.getCurrentPosition.mock.calls[1][2]).toMatchObject({
+    enableHighAccuracy: false,
+    timeout: 10000,
+  });
+});
+
+it('retries when high accuracy reports position unavailable (code 2)', async () => {
+  geo.getCurrentPosition
+    .mockImplementationOnce((_ok: unknown, err: (e: unknown) => void) =>
+      err({ code: 2 }),
+    )
+    .mockImplementationOnce((ok: (p: unknown) => void) =>
+      ok({ coords: { latitude: 3, longitude: 4 } }),
+    );
+  await expect(getCurrentCoords()).resolves.toEqual({ lat: 3, lng: 4 });
 });
 
 it('maps geolocation error code 1 to LocationPermissionError', async () => {
@@ -81,7 +117,7 @@ it('maps geolocation error code 1 to LocationPermissionError', async () => {
   );
 });
 
-it('maps timeout (code 3) to a plain Error', async () => {
+it('maps timeout (code 3) on both attempts to a plain Error', async () => {
   geo.getCurrentPosition.mockImplementation(
     (_ok: unknown, err: (e: unknown) => void) =>
       err({ code: 3, message: 'timeout' }),
