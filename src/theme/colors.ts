@@ -28,4 +28,10 @@ export const colors = {
   inverseSurface: '#322F35',
   inverseOnSurface: '#F5EFF7',
   scrim: '#000000',
+  // Chat: trang thai online va bong bong tin nhan.
+  online: '#2E9D57',
+  bubbleMine: '#6750A4',
+  onBubbleMine: '#FFFFFF',
+  bubbleOther: '#FFFFFF',
+  onBubbleOther: '#1C1B1F',
 } as const;
