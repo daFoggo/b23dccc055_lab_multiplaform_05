@@ -4,10 +4,12 @@ import {
   loadOlderMessages,
   markRead,
   newMessageId,
+  sendLocationMessage,
   sendTextMessage,
   subscribeMessages,
 } from '../../../services/chat-service';
 import { canSend, groupByDay } from '../../../lib/messages';
+import { isValidCoords } from '../../../lib/maps';
 import type { ChatMessage } from '../../../services/types';
 
 const INITIAL_LIMIT = 50;
@@ -137,20 +139,30 @@ export function useMessages(
   }, [chatId, server]);
 
   const deliver = useCallback(
-    async (id: string, text: string) => {
+    async (message: ChatMessage) => {
+      const me = { uid: myUid, name: myName };
+      const peer = { uid: peerId, name: peerName };
       try {
-        await sendTextMessage(
-          { uid: myUid, name: myName },
-          { uid: peerId, name: peerName },
-          text,
-          id,
-        );
+        if (
+          message.type === 'location' &&
+          message.lat !== undefined &&
+          message.lng !== undefined
+        ) {
+          await sendLocationMessage(
+            me,
+            peer,
+            { lat: message.lat, lng: message.lng },
+            message.id,
+          );
+        } else {
+          await sendTextMessage(me, peer, message.text ?? '', message.id);
+        }
         // Keep the pending row; the realtime echo (same id) replaces it.
       } catch {
         if (mounted.current) {
           setPending(prev =>
             prev.map(p =>
-              p.id === id ? { ...p, pending: false, failed: true } : p,
+              p.id === message.id ? { ...p, pending: false, failed: true } : p,
             ),
           );
         }
@@ -159,38 +171,51 @@ export function useMessages(
     [myUid, myName, peerId, peerName],
   );
 
-  const send = useCallback(
-    async (text: string) => {
-      if (!myUid || !canSend(text)) {
-        return;
-      }
-      const trimmed = text.trim();
+  const enqueue = useCallback(
+    async (fields: Pick<ChatMessage, 'type' | 'text' | 'lat' | 'lng'>) => {
       let id: string;
       try {
         id = newMessageId(chatId);
       } catch {
         return;
       }
-      setPending(prev => [
-        ...prev,
-        {
-          id,
-          senderId: myUid,
-          type: 'text',
-          text: trimmed,
-          createdAt: Date.now(),
-          pending: true,
-        },
-      ]);
-      await deliver(id, trimmed);
+      const message: ChatMessage = {
+        id,
+        senderId: myUid,
+        ...fields,
+        createdAt: Date.now(),
+        pending: true,
+      };
+      setPending(prev => [...prev, message]);
+      await deliver(message);
     },
     [chatId, myUid, deliver],
+  );
+
+  const send = useCallback(
+    async (text: string) => {
+      if (!myUid || !canSend(text)) {
+        return;
+      }
+      await enqueue({ type: 'text', text: text.trim() });
+    },
+    [myUid, enqueue],
+  );
+
+  const sendLocation = useCallback(
+    async (coords: { lat: number; lng: number }) => {
+      if (!myUid || !isValidCoords(coords.lat, coords.lng)) {
+        return;
+      }
+      await enqueue({ type: 'location', lat: coords.lat, lng: coords.lng });
+    },
+    [myUid, enqueue],
   );
 
   const retry = useCallback(
     async (id: string) => {
       const target = pendingRef.current.find(p => p.id === id && p.failed);
-      if (!target || target.text === undefined) {
+      if (!target) {
         return;
       }
       setPending(prev =>
@@ -198,10 +223,10 @@ export function useMessages(
           p.id === id ? { ...p, pending: true, failed: false } : p,
         ),
       );
-      await deliver(id, target.text);
+      await deliver(target);
     },
     [deliver],
   );
 
-  return { items, loadOlder, send, retry };
+  return { items, loadOlder, send, sendLocation, retry };
 }

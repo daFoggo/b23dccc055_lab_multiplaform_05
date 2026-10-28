@@ -11,6 +11,10 @@ import { paperTheme } from '../../../theme/paper-theme';
 jest.mock('../../../services/firebase', () => ({ auth: {}, db: {} }));
 jest.mock('../../auth/auth-context', () => ({ useAuth: jest.fn() }));
 jest.mock('../hooks/use-messages', () => ({ useMessages: jest.fn() }));
+jest.mock('@react-native-community/geolocation', () => ({
+  __esModule: true,
+  default: {},
+}));
 jest.mock('../hooks/use-peer', () => ({ usePeer: jest.fn() }));
 jest.mock('@react-navigation/elements', () => ({ useHeaderHeight: () => 56 }));
 jest.mock(
@@ -19,6 +23,7 @@ jest.mock(
 );
 
 const send = jest.fn();
+const sendLocation = jest.fn();
 const route = { params: { peerId: 'b', peerName: 'Bình' } };
 
 let headerTitle: (() => React.ReactNode) | undefined;
@@ -107,4 +112,77 @@ it('renders no list without a signed-in user', async () => {
   (useAuth as jest.Mock).mockReturnValue({ user: null });
   const r = await render();
   expect(r.root.findAllByProps({ testID: 'message-list' })).toHaveLength(0);
+});
+
+describe('send location', () => {
+  const { Linking } = require('react-native');
+  const loc = require('../../../services/location-service');
+
+  const press = async (r: ReactTestRenderer.ReactTestRenderer) => {
+    await act(async () => {
+      r.root.findAllByProps({ testID: 'location-button' })[0].props.onPress();
+    });
+  };
+
+  beforeEach(() => {
+    (useMessages as jest.Mock).mockReturnValue({
+      items: [],
+      loadOlder: jest.fn(),
+      send,
+      sendLocation,
+      retry: jest.fn(),
+    });
+  });
+
+  it('sends coordinates on success', async () => {
+    jest
+      .spyOn(loc, 'getCurrentCoords')
+      .mockResolvedValue({ lat: 21.03, lng: 105.85 });
+    const r = await render();
+    await press(r);
+    expect(sendLocation).toHaveBeenCalledWith({ lat: 21.03, lng: 105.85 });
+  });
+
+  it('shows the permission Snackbar and does not send on denial', async () => {
+    jest
+      .spyOn(loc, 'getCurrentCoords')
+      .mockRejectedValue(new loc.LocationPermissionError());
+    const open = jest.spyOn(Linking, 'openSettings').mockResolvedValue(undefined);
+    const r = await render();
+    await press(r);
+    expect(JSON.stringify(r.toJSON())).toContain(
+      'Cần cấp quyền vị trí để gửi vị trí.',
+    );
+    expect(sendLocation).not.toHaveBeenCalled();
+    const action = r.root.findAll(
+      n => n.props.accessibilityLabel === 'Cài đặt' && n.props.onPress,
+    )[0];
+    await act(async () => action.props.onPress());
+    expect(open).toHaveBeenCalled();
+  });
+
+  it('shows a generic Snackbar for other errors', async () => {
+    jest
+      .spyOn(loc, 'getCurrentCoords')
+      .mockRejectedValue(new Error('Không lấy được vị trí'));
+    const r = await render();
+    await press(r);
+    expect(JSON.stringify(r.toJSON())).toContain('Không lấy được vị trí.');
+    expect(sendLocation).not.toHaveBeenCalled();
+  });
+
+  it('ignores a second tap while fetching', async () => {
+    let resolve!: (c: { lat: number; lng: number }) => void;
+    const spy = jest.spyOn(loc, 'getCurrentCoords').mockReturnValue(
+      new Promise(res => {
+        resolve = res;
+      }),
+    );
+    const r = await render();
+    await press(r);
+    await press(r);
+    expect(spy).toHaveBeenCalledTimes(1);
+    await act(async () => resolve({ lat: 1, lng: 2 }));
+    expect(sendLocation).toHaveBeenCalledTimes(1);
+  });
 });

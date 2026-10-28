@@ -6,6 +6,7 @@ import {
   loadOlderMessages,
   markRead,
   newMessageId,
+  sendLocationMessage,
   sendTextMessage,
   subscribeMessages,
 } from '../../../services/chat-service';
@@ -16,6 +17,7 @@ jest.mock('../../../services/chat-service', () => ({
   subscribeMessages: jest.fn(),
   loadOlderMessages: jest.fn(),
   sendTextMessage: jest.fn(),
+  sendLocationMessage: jest.fn(),
   markRead: jest.fn(),
   newMessageId: jest.fn(),
 }));
@@ -60,6 +62,7 @@ beforeEach(() => {
   (newMessageId as jest.Mock).mockImplementation(() => `srv-${++n}`);
   (markRead as jest.Mock).mockResolvedValue(undefined);
   (sendTextMessage as jest.Mock).mockResolvedValue(undefined);
+  (sendLocationMessage as jest.Mock).mockResolvedValue(undefined);
 });
 
 it('subscribes once on mount and cleans up exactly once', async () => {
@@ -172,12 +175,12 @@ it('shows a pending item under the server id and keeps it until the echo', async
 
 it('two identical messages sent quickly give two distinct rows and no loss', async () => {
   const { out } = await run();
+  const t = Date.now();
   await act(async () => {
     out.current!.send('ok');
     out.current!.send('ok');
   });
   expect(messagesOf(out.current!).map(m => m.id)).toEqual(['srv-1', 'srv-2']);
-  const t = Date.now();
   await act(async () => emit([msg('srv-1', 'a', t, 'ok')]));
   expect(messagesOf(out.current!).map(m => m.id)).toEqual(['srv-1', 'srv-2']);
   await act(async () =>
@@ -254,4 +257,75 @@ it('does not call markRead while backgrounded, then marks on return', async () =
   await act(async () => listener('active'));
   expect(markRead).toHaveBeenCalledTimes(3);
   spy.mockRestore();
+});
+
+describe('sendLocation', () => {
+  const coords = { lat: 21.0285, lng: 105.8542 };
+
+  it('shows a pending location item then keeps it until the echo', async () => {
+    let resolve!: () => void;
+    (sendLocationMessage as jest.Mock).mockReturnValue(
+      new Promise<void>(res => {
+        resolve = res;
+      }),
+    );
+    const { out } = await run();
+    await act(async () => {
+      out.current!.sendLocation(coords);
+    });
+    const [m] = messagesOf(out.current!);
+    expect(m).toMatchObject({
+      id: 'srv-1',
+      type: 'location',
+      lat: 21.0285,
+      lng: 105.8542,
+      pending: true,
+    });
+    expect(sendLocationMessage).toHaveBeenCalledWith(
+      { uid: 'a', name: 'An' },
+      { uid: 'b', name: 'Bình' },
+      coords,
+      'srv-1',
+    );
+    await act(async () => resolve());
+    expect(messagesOf(out.current!)[0].pending).toBe(true);
+    await act(async () =>
+      emit([{ ...m, pending: undefined, createdAt: 5000 }]),
+    );
+    expect(messagesOf(out.current!)).toHaveLength(1);
+    expect(messagesOf(out.current!)[0].pending).toBeUndefined();
+  });
+
+  it('marks failed on error and retry resends with the same id', async () => {
+    (sendLocationMessage as jest.Mock).mockRejectedValueOnce(new Error('x'));
+    const { out } = await run();
+    await act(async () => {
+      await out.current!.sendLocation(coords);
+    });
+    expect(messagesOf(out.current!)[0]).toMatchObject({
+      type: 'location',
+      failed: true,
+      pending: false,
+    });
+    (sendLocationMessage as jest.Mock).mockResolvedValueOnce(undefined);
+    await act(async () => {
+      await out.current!.retry('srv-1');
+    });
+    expect(sendLocationMessage).toHaveBeenCalledTimes(2);
+    expect((sendLocationMessage as jest.Mock).mock.calls[1][3]).toBe('srv-1');
+    expect(sendTextMessage).not.toHaveBeenCalled();
+    expect(messagesOf(out.current!)[0]).toMatchObject({
+      pending: true,
+      failed: false,
+    });
+  });
+
+  it('ignores invalid coordinates', async () => {
+    const { out } = await run();
+    await act(async () => {
+      await out.current!.sendLocation({ lat: 200, lng: 0 });
+    });
+    expect(sendLocationMessage).not.toHaveBeenCalled();
+    expect(messagesOf(out.current!)).toHaveLength(0);
+  });
 });

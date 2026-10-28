@@ -15,9 +15,14 @@ import {
 type Props = {
   onSend: (text: string) => void;
   onPressLocation?: () => void;
+  locating?: boolean;
 };
 
-export function MessageInput({ onSend, onPressLocation }: Props) {
+export function MessageInput({
+  onSend,
+  onPressLocation,
+  locating = false,
+}: Props) {
   const [text, setText] = useState('');
   const enabled = canSend(text);
 
@@ -38,6 +43,8 @@ export function MessageInput({ onSend, onPressLocation }: Props) {
           size={24}
           style={styles.button}
           accessibilityLabel="Gửi vị trí"
+          disabled={locating}
+          loading={locating}
           onPress={onPressLocation}
         />
       ) : null}

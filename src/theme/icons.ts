@@ -7,6 +7,7 @@ export const icons = {
   pending: 'clock-outline',
   send: 'send',
   location: 'map-marker-outline',
+  mapMarker: 'map-marker',
   eye: 'eye',
   eyeOff: 'eye-off',
   search: 'magnify',

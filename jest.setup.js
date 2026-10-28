@@ -40,3 +40,13 @@ jest.mock('firebase/database', () => ({
   endBefore: jest.fn(),
   serverTimestamp: jest.fn(() => ({'.sv': 'timestamp'})),
 }));
+
+// Native module is not linked under jest.
+jest.mock('@react-native-community/geolocation', () => ({
+  __esModule: true,
+  default: {
+    setRNConfiguration: jest.fn(),
+    requestAuthorization: jest.fn(),
+    getCurrentPosition: jest.fn(),
+  },
+}));

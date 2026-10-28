@@ -5,6 +5,7 @@ import { icons } from '../../../theme/icons';
 import { formatTime } from '../../../lib/format-time';
 import { colors } from '../../../theme/colors';
 import { radius, spacing } from '../../../theme/metrics';
+import { LocationBubble } from './location-bubble';
 import type { ChatMessage } from '../../../services/types';
 
 type Props = {
@@ -38,41 +39,49 @@ export function MessageBubble({
     message.createdAt,
   )}, ${message.text ?? ''}`;
 
-  const body = (
-    <Surface
-      testID={`bubble-${message.id}`}
-      elevation={0}
-      accessible
-      accessibilityLabel={label}
-      style={[
-        styles.bubble,
-        wrapped ? styles.fill : null,
-        mine ? styles.bubbleMine : styles.bubbleOther,
-        { backgroundColor: background },
-        message.pending ? styles.pending : null,
-      ]}
-    >
-      <Text variant="bodyLarge" style={{ color: foreground }}>
-        {message.text}
-      </Text>
-      <View style={styles.meta}>
-        {failed ? (
-          <Text variant="labelSmall" style={{ color: theme.colors.error }}>
-            Gửi lại
-          </Text>
-        ) : null}
-        {message.pending ? (
-          <View accessible accessibilityLabel="Đang gửi">
-            <Icon source={icons.pending} size={12} color={foreground} />
-          </View>
-        ) : (
-          <Text variant="bodySmall" style={{ color: foreground }}>
-            {formatTime(message.createdAt)}
-          </Text>
-        )}
-      </View>
-    </Surface>
-  );
+  const body =
+    message.type === 'location' ? (
+      <LocationBubble
+        message={message}
+        mine={mine}
+        label={mine ? 'Vị trí của tôi' : `Vị trí của ${senderName}`}
+        disabled={wrapped}
+      />
+    ) : (
+      <Surface
+        testID={`bubble-${message.id}`}
+        elevation={0}
+        accessible
+        accessibilityLabel={label}
+        style={[
+          styles.bubble,
+          wrapped ? styles.fill : null,
+          mine ? styles.bubbleMine : styles.bubbleOther,
+          { backgroundColor: background },
+          message.pending ? styles.pending : null,
+        ]}
+      >
+        <Text variant="bodyLarge" style={{ color: foreground }}>
+          {message.text}
+        </Text>
+        <View style={styles.meta}>
+          {failed ? (
+            <Text variant="labelSmall" style={{ color: theme.colors.error }}>
+              Gửi lại
+            </Text>
+          ) : null}
+          {message.pending ? (
+            <View accessible accessibilityLabel="Đang gửi">
+              <Icon source={icons.pending} size={12} color={foreground} />
+            </View>
+          ) : (
+            <Text variant="bodySmall" style={{ color: foreground }}>
+              {formatTime(message.createdAt)}
+            </Text>
+          )}
+        </View>
+      </Surface>
+    );
 
   return (
     <View

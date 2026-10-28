@@ -9,10 +9,17 @@ import {
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
+  Linking,
   StyleSheet,
   View,
 } from 'react-native';
-import { ActivityIndicator, Avatar, Text, useTheme } from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Avatar,
+  Snackbar,
+  Text,
+  useTheme,
+} from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -21,6 +28,10 @@ import { MessageBubble } from '../components/message-bubble';
 import { MessageInput } from '../components/message-input';
 import { useMessages } from '../hooks/use-messages';
 import { usePeer } from '../hooks/use-peer';
+import {
+  getCurrentCoords,
+  LocationPermissionError,
+} from '../../../services/location-service';
 import { avatarColor, initials } from '../../../lib/avatar';
 import { getChatId } from '../../../lib/chat-id';
 import { formatLastSeen } from '../../../lib/format-time';
@@ -76,7 +87,7 @@ export function ChatScreen({ route, navigation }: Props) {
   const { user } = useAuth();
   const myUid = user?.uid ?? '';
   const chatId = getChatId(myUid, peerId);
-  const { items, loadOlder, send, retry } = useMessages(
+  const { items, loadOlder, send, sendLocation, retry } = useMessages(
     chatId,
     myUid,
     peerId,
@@ -109,6 +120,52 @@ export function ChatScreen({ route, navigation }: Props) {
     },
     [send],
   );
+  const [locating, setLocating] = useState(false);
+  const locatingRef = useRef(false);
+  const [snack, setSnack] = useState<{
+    message: string;
+    settings: boolean;
+  } | null>(null);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const handleLocation = useCallback(async () => {
+    if (locatingRef.current) {
+      return;
+    }
+    locatingRef.current = true;
+    setLocating(true);
+    try {
+      const coords = await getCurrentCoords();
+      if (!mountedRef.current) {
+        return;
+      }
+      sendLocation(coords);
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    } catch (e) {
+      if (mountedRef.current) {
+        setSnack(
+          e instanceof LocationPermissionError
+            ? {
+                message: 'Cần cấp quyền vị trí để gửi vị trí.',
+                settings: true,
+              }
+            : { message: 'Không lấy được vị trí.', settings: false },
+        );
+      }
+    } finally {
+      locatingRef.current = false;
+      if (mountedRef.current) {
+        setLocating(false);
+      }
+    }
+  }, [sendLocation]);
+
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -202,8 +259,30 @@ export function ChatScreen({ route, navigation }: Props) {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.listContent}
         />
-        <MessageInput onSend={handleSend} />
+        <MessageInput
+          onSend={handleSend}
+          onPressLocation={handleLocation}
+          locating={locating}
+        />
       </KeyboardAvoidingView>
+      <Snackbar
+        visible={snack !== null}
+        onDismiss={() => setSnack(null)}
+        duration={5000}
+        action={
+          snack?.settings
+            ? {
+                label: 'Cài đặt',
+                accessibilityLabel: 'Cài đặt',
+                onPress: () => {
+                  Linking.openSettings().catch(() => {});
+                },
+              }
+            : undefined
+        }
+      >
+        {snack?.message ?? ''}
+      </Snackbar>
     </View>
   );
 }
