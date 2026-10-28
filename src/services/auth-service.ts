@@ -6,12 +6,12 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import {auth} from './firebase';
-import {setOffline} from './presence-service';
-import type {AuthUser, Unsubscribe} from './types';
-import {createUserProfile} from './user-service';
+import { auth } from './firebase';
+import { setOffline } from './presence-service';
+import type { AuthUser, Unsubscribe } from './types';
+import { createUserProfile } from './user-service';
 
-export type {AuthUser};
+export type { AuthUser };
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
@@ -30,7 +30,7 @@ export async function registerUser(
     password,
   );
   try {
-    await updateProfile(cred.user, {displayName});
+    await updateProfile(cred.user, { displayName });
     await createUserProfile(cred.user.uid, displayName);
   } catch (e) {
     // Avoid an orphan account / profile-less signed-in user.
@@ -93,6 +93,14 @@ export function mapAuthError(code: string): string {
       return 'Email không hợp lệ.';
     case 'auth/network-request-failed':
       return 'Không có kết nối mạng. Vui lòng thử lại.';
+    case 'auth/operation-not-allowed':
+      return 'Đăng ký/đăng nhập bằng email chưa được bật trong Firebase. Hãy bật Email/Password trong Authentication.';
+    case 'auth/configuration-not-found':
+      return 'Firebase Authentication chưa được khởi tạo cho project này. Hãy bật Email/Password trong Authentication.';
+    case 'auth/too-many-requests':
+      return 'Thử quá nhiều lần. Vui lòng đợi một lát rồi thử lại.';
+    case 'auth/user-disabled':
+      return 'Tài khoản đã bị vô hiệu hóa.';
     default:
       return 'Đã xảy ra lỗi. Vui lòng thử lại.';
   }

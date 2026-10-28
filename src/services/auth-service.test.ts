@@ -13,13 +13,13 @@ import {
   registerUser,
   subscribeAuth,
 } from './auth-service';
-import {createUserProfile} from './user-service';
-import {setOffline} from './presence-service';
+import { createUserProfile } from './user-service';
+import { setOffline } from './presence-service';
 
-jest.mock('./user-service', () => ({createUserProfile: jest.fn()}));
-jest.mock('./presence-service', () => ({setOffline: jest.fn()}));
+jest.mock('./user-service', () => ({ createUserProfile: jest.fn() }));
+jest.mock('./presence-service', () => ({ setOffline: jest.fn() }));
 jest.mock('./firebase', () => ({
-  auth: {currentUser: {uid: 'u1'}},
+  auth: { currentUser: { uid: 'u1' } },
   db: {},
 }));
 
@@ -52,6 +52,21 @@ describe('mapAuthError', () => {
     );
   });
 
+  it('maps provider-config, throttling and disabled codes', () => {
+    const hint =
+      'Đăng ký/đăng nhập bằng email chưa được bật trong Firebase. Hãy bật Email/Password trong Authentication.';
+    expect(mapAuthError('auth/operation-not-allowed')).toBe(hint);
+    expect(mapAuthError('auth/configuration-not-found')).toBe(
+      'Firebase Authentication chưa được khởi tạo cho project này. Hãy bật Email/Password trong Authentication.',
+    );
+    expect(mapAuthError('auth/too-many-requests')).toBe(
+      'Thử quá nhiều lần. Vui lòng đợi một lát rồi thử lại.',
+    );
+    expect(mapAuthError('auth/user-disabled')).toBe(
+      'Tài khoản đã bị vô hiệu hóa.',
+    );
+  });
+
   it('returns a generic message for unknown codes', () => {
     expect(mapAuthError('auth/whatever')).toBe(
       'Đã xảy ra lỗi. Vui lòng thử lại.',
@@ -73,8 +88,8 @@ describe('loginUser', () => {
 
 describe('registerUser', () => {
   it('creates account, sets displayName, then creates profile', async () => {
-    const user = {uid: 'u9'};
-    m(createUserWithEmailAndPassword).mockResolvedValue({user});
+    const user = { uid: 'u9' };
+    m(createUserWithEmailAndPassword).mockResolvedValue({ user });
     m(updateProfile).mockResolvedValue(undefined);
     m(createUserProfile).mockResolvedValue(undefined);
     await registerUser(' An ', ' X@Y.com ', 'secret1');
@@ -83,7 +98,7 @@ describe('registerUser', () => {
       'x@y.com',
       'secret1',
     );
-    expect(updateProfile).toHaveBeenCalledWith(user, {displayName: 'An'});
+    expect(updateProfile).toHaveBeenCalledWith(user, { displayName: 'An' });
     expect(createUserProfile).toHaveBeenCalledWith('u9', 'An');
     expect(m(updateProfile).mock.invocationCallOrder[0]).toBeLessThan(
       m(createUserProfile).mock.invocationCallOrder[0],
@@ -103,9 +118,9 @@ describe('registerUser failures', () => {
   });
 
   it('deletes the new user and rethrows when createUserProfile fails', async () => {
-    const user = {uid: 'u9'};
+    const user = { uid: 'u9' };
     const err = new Error('rules denied');
-    m(createUserWithEmailAndPassword).mockResolvedValue({user});
+    m(createUserWithEmailAndPassword).mockResolvedValue({ user });
     m(updateProfile).mockResolvedValue(undefined);
     m(createUserProfile).mockRejectedValue(err);
     m(deleteUser).mockResolvedValue(undefined);
@@ -115,9 +130,9 @@ describe('registerUser failures', () => {
   });
 
   it('deletes the new user and rethrows when updateProfile fails, ignoring delete errors', async () => {
-    const user = {uid: 'u9'};
+    const user = { uid: 'u9' };
     const err = new Error('boom');
-    m(createUserWithEmailAndPassword).mockResolvedValue({user});
+    m(createUserWithEmailAndPassword).mockResolvedValue({ user });
     m(updateProfile).mockRejectedValue(err);
     m(deleteUser).mockRejectedValue(new Error('delete failed'));
     await expect(registerUser('An', 'a@b.com', 'secret1')).rejects.toBe(err);
@@ -165,8 +180,8 @@ describe('subscribeAuth', () => {
     const cb = jest.fn();
     const result = subscribeAuth(cb);
     const handler = m(onAuthStateChanged).mock.calls[0][1];
-    handler({uid: 'a', displayName: 'Bo', email: 'bo@x.com'});
-    handler({uid: 'b', displayName: null, email: 'cat@x.com'});
+    handler({ uid: 'a', displayName: 'Bo', email: 'bo@x.com' });
+    handler({ uid: 'b', displayName: null, email: 'cat@x.com' });
     handler(null);
     expect(cb).toHaveBeenNthCalledWith(1, {
       uid: 'a',

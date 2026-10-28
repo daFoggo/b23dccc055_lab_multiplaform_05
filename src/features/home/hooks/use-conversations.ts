@@ -25,15 +25,16 @@ export function useConversations(uid: string): ConversationsState {
   }>(() => ({ uid, state: initial(uid) }));
   // Never expose another user's data: derive it, tagged with its owner uid.
   const state = owned.uid === uid ? owned.state : initial(uid);
-  const setState = (next: ConversationsState) => setOwned({ uid, state: next });
 
   useEffect(() => {
+    const setOwnedState = (next: ConversationsState) =>
+      setOwned({ uid, state: next });
     if (!uid) {
-      setState(EMPTY);
+      setOwnedState(EMPTY);
       return undefined;
     }
     let active = true;
-    setState({ ...EMPTY, loading: true });
+    setOwnedState({ ...EMPTY, loading: true });
     const unsubscribe = subscribeConversations(
       uid,
       list => {
@@ -43,7 +44,7 @@ export function useConversations(uid: string): ConversationsState {
         const conversations = list.filter(
           c => c.peerId !== uid && c.lastAt > 0,
         );
-        setState({
+        setOwnedState({
           conversations,
           totalUnread: conversations.reduce((s, c) => s + c.unread, 0),
           loading: false,
@@ -52,7 +53,7 @@ export function useConversations(uid: string): ConversationsState {
       },
       () => {
         if (active) {
-          setState({
+          setOwnedState({
             ...EMPTY,
             error: 'Không tải được danh sách trò chuyện',
           });

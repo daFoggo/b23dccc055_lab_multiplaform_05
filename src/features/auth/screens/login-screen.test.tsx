@@ -57,6 +57,19 @@ describe('LoginScreen', () => {
     expect(texts(r)).toContain('Sai email hoặc mật khẩu.');
   });
 
+  it('shows the mapped message for too-many-requests', async () => {
+    (loginUser as jest.Mock).mockRejectedValue({
+      code: 'auth/too-many-requests',
+    });
+    const { r, submit } = await setup();
+    await act(async () => {
+      submit().props.onPress();
+    });
+    expect(texts(r)).toContain(
+      'Thử quá nhiều lần. Vui lòng đợi một lát rồi thử lại.',
+    );
+  });
+
   it('clears the form error when the user edits a field', async () => {
     (loginUser as jest.Mock).mockRejectedValue({
       code: 'auth/invalid-credential',

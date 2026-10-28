@@ -134,10 +134,52 @@ function ConversationMeta({
 const metaFor = (item: ConversationSummary, now: number) => () =>
   <ConversationMeta item={item} now={now} />;
 
-export function HomeScreen() {
+// Module-level so FlatList gets a stable component (no remount per render/tick).
+function HomeEmpty() {
   const theme = useTheme();
   const navigation = useNavigation<Nav>();
-  const { conversations, loading, error } = useConversationsContext();
+  const { loading, error } = useConversationsContext();
+  if (loading) {
+    return (
+      <ActivityIndicator testID="home-loading" animating style={styles.empty} />
+    );
+  }
+  if (error) {
+    return (
+      <Text
+        variant="bodyMedium"
+        style={[styles.emptyText, { color: theme.colors.error }]}
+      >
+        {error}
+      </Text>
+    );
+  }
+  return (
+    <View style={styles.empty}>
+      <Text variant="titleMedium" style={styles.emptyText}>
+        Chưa có cuộc trò chuyện nào
+      </Text>
+      <Text
+        variant="bodyMedium"
+        style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}
+      >
+        Vào Danh bạ để bắt đầu trò chuyện với ai đó.
+      </Text>
+      <Button
+        testID="go-contacts"
+        mode="contained-tonal"
+        style={styles.emptyButton}
+        onPress={() => navigation.navigate('Contacts')}
+      >
+        Mở Danh bạ
+      </Button>
+    </View>
+  );
+}
+
+export function HomeScreen() {
+  const navigation = useNavigation<Nav>();
+  const { conversations } = useConversationsContext();
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -170,37 +212,6 @@ export function HomeScreen() {
     );
   };
 
-  const empty = loading ? (
-    <ActivityIndicator testID="home-loading" animating style={styles.empty} />
-  ) : error ? (
-    <Text
-      variant="bodyMedium"
-      style={[styles.emptyText, { color: theme.colors.error }]}
-    >
-      {error}
-    </Text>
-  ) : (
-    <View style={styles.empty}>
-      <Text variant="titleMedium" style={styles.emptyText}>
-        Chưa có cuộc trò chuyện nào
-      </Text>
-      <Text
-        variant="bodyMedium"
-        style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}
-      >
-        Vào Danh bạ để bắt đầu trò chuyện với ai đó.
-      </Text>
-      <Button
-        testID="go-contacts"
-        mode="contained-tonal"
-        style={styles.emptyButton}
-        onPress={() => navigation.navigate('Contacts')}
-      >
-        Mở Danh bạ
-      </Button>
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Text variant="titleLarge" style={styles.title}>
@@ -210,7 +221,7 @@ export function HomeScreen() {
         data={conversations}
         keyExtractor={item => item.peerId}
         renderItem={renderItem}
-        ListEmptyComponent={empty}
+        ListEmptyComponent={HomeEmpty}
       />
     </SafeAreaView>
   );
