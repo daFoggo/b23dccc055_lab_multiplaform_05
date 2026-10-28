@@ -17,9 +17,15 @@ const EMPTY: ConversationsState = {
 };
 
 export function useConversations(uid: string): ConversationsState {
-  const [state, setState] = useState<ConversationsState>(
-    uid ? { ...EMPTY, loading: true } : EMPTY,
-  );
+  const initial = (u: string): ConversationsState =>
+    u ? { ...EMPTY, loading: true } : EMPTY;
+  const [owned, setOwned] = useState<{
+    uid: string;
+    state: ConversationsState;
+  }>(() => ({ uid, state: initial(uid) }));
+  // Never expose another user's data: derive it, tagged with its owner uid.
+  const state = owned.uid === uid ? owned.state : initial(uid);
+  const setState = (next: ConversationsState) => setOwned({ uid, state: next });
 
   useEffect(() => {
     if (!uid) {

@@ -105,3 +105,27 @@ it('ignores callbacks after unmount', async () => {
   expect(spy).not.toHaveBeenCalled();
   spy.mockRestore();
 });
+
+it('does not expose the previous user data after the uid changes', async () => {
+  let emit!: (l: unknown[]) => void;
+  (subscribeConversations as jest.Mock).mockImplementation((_uid, cb) => {
+    emit = cb;
+    return jest.fn();
+  });
+  const seen: Result[] = [];
+  function Probe({ uid }: { uid: string }) {
+    const value = useConversations(uid);
+    seen.push(value);
+    return null;
+  }
+  let r!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    r = ReactTestRenderer.create(<Probe uid="a" />);
+  });
+  await act(async () => emit([conv('x', 2)]));
+  seen.length = 0;
+  await act(async () => r.update(<Probe uid="b" />));
+  expect(seen[0].conversations).toEqual([]);
+  expect(seen[0].totalUnread).toBe(0);
+  expect(seen[0].loading).toBe(true);
+});

@@ -74,6 +74,14 @@ it('renders rows with name, preview, badge and navigates on press', () => {
   expect(r.root.findAllByProps({ testID: 'unread-a' }).length).toBeGreaterThan(
     0,
   );
+  expect(
+    r.root.findAllByProps({ testID: 'conversation-a' })[0].props
+      .accessibilityLabel,
+  ).toBe('An Nguyen, 120 tin chưa đọc, xin chao');
+  expect(
+    r.root.findAllByProps({ testID: 'conversation-b' })[0].props
+      .accessibilityLabel,
+  ).toBe('Binh, Vị trí');
   act(() => {
     r.root.findAllByProps({ testID: 'conversation-a' })[0].props.onPress();
   });

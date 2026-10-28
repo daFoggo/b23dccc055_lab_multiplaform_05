@@ -33,6 +33,11 @@ test('formatLastSeen', () => {
 describe('formatConversationTime', () => {
   const now = at(28, 15); // Wed 28/10/2026
 
+  test('clamps timestamps after now to now (server clock skew)', () => {
+    const late = at(28, 23, 59);
+    expect(formatConversationTime(at(29, 0, 5), late)).toBe('23:59');
+    expect(formatConversationTime(at(28, 15, 3), now)).toBe('15:00');
+  });
   test('same day shows HH:mm', () => {
     expect(formatConversationTime(at(28, 9, 5), now)).toBe('09:05');
   });
@@ -48,8 +53,8 @@ describe('formatConversationTime', () => {
     expect(formatConversationTime(at(21, 8), now)).toBe('21/10/2026');
     expect(formatConversationTime(at(3, 8), now)).toBe('03/10/2026');
   });
-  test('future timestamps fall back to HH:mm when same day, else date', () => {
-    expect(formatConversationTime(at(28, 23), now)).toBe('23:00');
-    expect(formatConversationTime(at(30, 8), now)).toBe('30/10/2026');
+  test('future timestamps are clamped to now', () => {
+    expect(formatConversationTime(at(28, 23), now)).toBe('15:00');
+    expect(formatConversationTime(at(30, 8), now)).toBe('15:00');
   });
 });

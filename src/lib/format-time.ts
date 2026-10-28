@@ -56,7 +56,9 @@ export function formatLastSeen(
 
 const WEEKDAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
-export function formatConversationTime(ms: number, now: number): string {
+export function formatConversationTime(rawMs: number, now: number): string {
+  // serverTimestamp can run ahead of the device clock: never show the future.
+  const ms = Math.min(rawMs, now);
   const today = startOfDay(now);
   const day = startOfDay(ms);
   if (day === today) {

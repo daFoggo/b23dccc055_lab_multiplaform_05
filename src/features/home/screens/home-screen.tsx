@@ -28,8 +28,19 @@ import type { ConversationSummary } from '../../../services/types';
 
 type Nav = NavigationProp<RootStackParamList & TabParamList>;
 
+// Icon/avatar sizes used by this screen (single place to tweak).
 const AVATAR_SIZE = 48;
+const PREVIEW_ICON_SIZE = 16;
+const BADGE_SIZE = 20;
 const LOCATION_LABEL = 'Vị trí';
+
+function conversationLabel(item: ConversationSummary): string {
+  const preview =
+    item.lastType === 'location' ? LOCATION_LABEL : item.lastMessage;
+  return item.unread > 0
+    ? `${item.peerName}, ${item.unread} tin chưa đọc, ${preview}`
+    : `${item.peerName}, ${preview}`;
+}
 
 function ConversationAvatar({ item }: { item: ConversationSummary }) {
   return (
@@ -54,7 +65,7 @@ function ConversationPreview({ item }: { item: ConversationSummary }) {
     <View style={styles.previewRow}>
       <MaterialCommunityIcons
         name={icons.location}
-        size={16}
+        size={PREVIEW_ICON_SIZE}
         color={theme.colors.onSurfaceVariant}
       />
       <Text
@@ -104,7 +115,7 @@ function ConversationMeta({
       {unread ? (
         <Badge
           testID={`unread-${item.peerId}`}
-          size={20}
+          size={BADGE_SIZE}
           style={[
             styles.badge,
             {
@@ -139,6 +150,7 @@ export function HomeScreen() {
     return (
       <List.Item
         testID={`conversation-${item.peerId}`}
+        accessibilityLabel={conversationLabel(item)}
         title={item.peerName}
         titleNumberOfLines={1}
         titleStyle={{
@@ -158,37 +170,36 @@ export function HomeScreen() {
     );
   };
 
-  const renderEmpty = () =>
-    loading ? (
-      <ActivityIndicator testID="home-loading" animating style={styles.empty} />
-    ) : error ? (
+  const empty = loading ? (
+    <ActivityIndicator testID="home-loading" animating style={styles.empty} />
+  ) : error ? (
+    <Text
+      variant="bodyMedium"
+      style={[styles.emptyText, { color: theme.colors.error }]}
+    >
+      {error}
+    </Text>
+  ) : (
+    <View style={styles.empty}>
+      <Text variant="titleMedium" style={styles.emptyText}>
+        Chưa có cuộc trò chuyện nào
+      </Text>
       <Text
         variant="bodyMedium"
-        style={[styles.emptyText, { color: theme.colors.error }]}
+        style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}
       >
-        {error}
+        Vào Danh bạ để bắt đầu trò chuyện với ai đó.
       </Text>
-    ) : (
-      <View style={styles.empty}>
-        <Text variant="titleMedium" style={styles.emptyText}>
-          Chưa có cuộc trò chuyện nào
-        </Text>
-        <Text
-          variant="bodyMedium"
-          style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}
-        >
-          Vào Danh bạ để bắt đầu trò chuyện với ai đó.
-        </Text>
-        <Button
-          testID="go-contacts"
-          mode="contained-tonal"
-          style={styles.emptyButton}
-          onPress={() => navigation.navigate('Contacts')}
-        >
-          Mở Danh bạ
-        </Button>
-      </View>
-    );
+      <Button
+        testID="go-contacts"
+        mode="contained-tonal"
+        style={styles.emptyButton}
+        onPress={() => navigation.navigate('Contacts')}
+      >
+        Mở Danh bạ
+      </Button>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -199,7 +210,7 @@ export function HomeScreen() {
         data={conversations}
         keyExtractor={item => item.peerId}
         renderItem={renderItem}
-        ListEmptyComponent={renderEmpty}
+        ListEmptyComponent={empty}
       />
     </SafeAreaView>
   );
