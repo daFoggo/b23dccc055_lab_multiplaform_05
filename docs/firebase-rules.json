@@ -45,7 +45,7 @@
               ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
             },
             "createdAt": {
-              ".validate": "newData.isNumber() && newData.val() <= now"
+              ".validate": "newData.isNumber() && newData.val() === now"
             },
             "$other": {
               ".validate": false
@@ -58,8 +58,9 @@
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         "$peer": {
+          ".read": "auth != null && (auth.uid === $uid || auth.uid === $peer)",
           ".write": "auth != null && (auth.uid === $uid || auth.uid === $peer)",
-          ".validate": "newData.hasChildren(['peerName', 'lastMessage', 'lastType', 'lastAt', 'unread'])",
+          ".validate": "newData.hasChildren(['peerName', 'lastMessage', 'lastType', 'lastAt'])",
           "peerName": {
             ".validate": "newData.isString() && newData.val() === root.child('users').child($peer).child('name').val()"
           },
