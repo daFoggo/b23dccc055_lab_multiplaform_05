@@ -1,50 +1,55 @@
-# PlannerApp – Quản lý kế hoạch cá nhân
+# ChatApp
 
-Bài kiểm tra giữa kỳ môn **Phát triển ứng dụng di động đa nền tảng** (Đề 3), làm bằng **React Native CLI** (không Expo), TypeScript.
+Bài thực hành 5 (RIPT1412-20261-02): chat 1-1 realtime với Firebase, làm bằng React Native CLI (không Expo) và TypeScript.
 
-![Demo](docs/demo/demo-form.jpg)
+## Mục tiêu (chưa hoàn thành)
 
-*Từ trái sang phải: danh sách, thêm việc (đang nhập), chi tiết việc quá hạn, xác nhận xoá.*
+- Đăng ký / đăng nhập / đăng xuất bằng Firebase Auth (Email/Password).
+- Danh bạ có tìm kiếm và trạng thái online/offline thời gian thực.
+- Chat 1-1 gửi nhận tức thì, kèm gửi vị trí (mở Google Maps).
+- Home liệt kê cuộc trò chuyện với số tin chưa đọc.
+- Màn Thông báo và Cài đặt.
 
-## Tính năng
+Trạng thái từng yêu cầu: xem `docs/danh-gia-de-bai.md`.
 
-- Danh sách `FlatList`: tiến độ "Đã hoàn thành X/Y", checkbox tự làm, nhãn ưu tiên đỏ/vàng/xanh, nhãn "Quá hạn".
-- Thêm / sửa dùng chung một form, kiểm tra dữ liệu (tên ≤ 50 ký tự, ngày `dd/mm/yyyy` có thật, không trước hôm nay khi thêm mới), có chọn nhanh hạn.
-- Xoá có xác nhận `Alert`: nhấn giữ một việc, hoặc xoá hàng loạt việc đã xong (kèm số lượng).
-- Chi tiết: số ngày còn lại / quá hạn, đổi trạng thái, sửa.
-- Lọc theo trạng thái (kèm số lượng), tìm kiếm không phân biệt hoa thường và dấu, sắp xếp theo hạn hoặc ưu tiên, dùng đồng thời.
-- Lưu bằng AsyncStorage; lần chạy đầu có 8 việc mẫu.
-- Giao diện: Material 3 kết hợp phong cách phẳng, font Inter, tất cả component tự dựng.
+## Chạy app
 
-## Công nghệ
-
-React Native 0.88, React Navigation (native-stack), react-native-screens, react-native-safe-area-context, AsyncStorage, react-native-vector-icons. Không dùng thư viện UI dựng sẵn.
-
-## Chạy ứng dụng
-
-```bash
+```sh
 npm install
 npx react-native start
-npx react-native run-android
+npx react-native run-android   # hoặc: npm run android
 ```
 
-Nếu cổng 8081 đang bị chiếm: `npx react-native start --port 8082`, rồi `cd android && ./gradlew installDebug -PreactNativeDevServerPort=8082` và `adb reverse tcp:8082 tcp:8082`.
+Cần cấu hình Firebase trước (xem `docs/firebase-setup.md`).
 
-Kiểm tra: `npm test` (111 test), `npx tsc --noEmit`, `npm run lint`.
+## Lệnh kiểm tra
 
-## Cấu trúc
+```sh
+npm test
+npx tsc --noEmit
+npm run lint
+```
+
+## Cấu trúc dự kiến
 
 ```
+App.tsx
 src/
-  navigation/        stack và kiểu tham số
-  features/tasks/    types, services (logic thuần), hooks, components, screens, tasks-context
-  components/        ui (button, chip, text-field, search-bar, fab, snackbar...), states
-  lib/               date, storage, id, confirm
-  theme/             colors, metrics, fonts
+  services/      firebase-config, firebase, auth, user, presence, chat, location
+  features/      auth, contacts, chat, home, notifications, settings
+  navigation/    root-navigator, tab-navigator, types
+  lib/           hàm thuần dùng chung (format-time...)
+  theme/         colors, fonts, metrics, paper-theme, component-styles
+docs/
 ```
+
+Quy tắc: màn hình -> hook -> `services/`; `services/` không import React; mọi listener được hủy trong cleanup của `useEffect`.
 
 ## Tài liệu
 
-- [Đề bài](docs/de-bai.md) và [bảng đối chiếu tiêu chí](docs/danh-gia-de-bai.md)
-- [Kiến trúc](docs/architecture.md), [nghiệp vụ và logic](docs/business-logic.md)
-- [Phong cách giao diện](docs/design-style.md), [tham chiếu Material 3](docs/material-3.md)
+- `docs/de-bai.md`: đề bài
+- `docs/danh-gia-de-bai.md`: đối chiếu đề bài
+- `docs/data-model.md`: mô hình dữ liệu và đánh giá luật
+- `docs/firebase-rules.json`: luật Realtime Database
+- `docs/firebase-setup.md`: thiết lập Firebase
+- `docs/superpowers/specs/2026-10-28-chat-realtime-design.md`: thiết kế
