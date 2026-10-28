@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { subscribeAuth } from '../../services/auth-service';
+import { startPresence } from '../../services/presence-service';
 import type { AuthUser } from '../../services/types';
 
 type AuthState = { user: AuthUser | null; initializing: boolean };
@@ -21,6 +22,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
     return unsubscribe;
   }, []);
+
+  const uid = state.user?.uid;
+  useEffect(() => {
+    if (!uid) {
+      return undefined;
+    }
+    return startPresence(uid);
+  }, [uid]);
 
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
 }

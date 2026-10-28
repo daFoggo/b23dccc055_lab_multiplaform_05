@@ -35,3 +35,15 @@ export const colors = {
   bubbleOther: '#FFFFFF',
   onBubbleOther: '#1C1B1F',
 } as const;
+
+// Palette avatar (mau on dinh theo uid), chu trang doc duoc tren moi mau.
+export const avatarPalette = [
+  '#6750A4',
+  '#0B6E8A',
+  '#2E7D32',
+  '#B3541E',
+  '#9C2F6B',
+  '#4A5FC1',
+  '#7A6A00',
+  '#00796B',
+] as const;
