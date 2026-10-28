@@ -80,4 +80,53 @@ describe('LoginScreen', () => {
     });
     expect(submit().props.disabled).toBeFalsy();
   });
+
+  describe('touched hardening', () => {
+    async function bare() {
+      let r!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        r = ReactTestRenderer.create(
+          <PaperProvider>
+            <LoginScreen navigation={navigation} route={route} />
+          </PaperProvider>,
+        );
+      });
+      const email = () =>
+        r.root.findByProps({ testID: 'login-email', label: 'Email' });
+      const submit = () =>
+        r.root.findByProps({ testID: 'login-submit', mode: 'contained' });
+      return { r, email, submit };
+    }
+
+    it('blur without typing shows no error', async () => {
+      const { email } = await bare();
+      await act(async () => {
+        email().props.onBlur();
+      });
+      expect(email().props.error).toBe(false);
+    });
+
+    it('typing invalid then blur shows error', async () => {
+      const { email } = await bare();
+      await act(async () => {
+        email().props.onChangeText('abc');
+      });
+      await act(async () => {
+        email().props.onBlur();
+      });
+      expect(email().props.error).toBe(true);
+    });
+
+    it('submit shows all errors', async () => {
+      const { r, email, submit } = await bare();
+      await act(async () => {
+        submit().props.onPress();
+      });
+      expect(email().props.error).toBe(true);
+      expect(
+        r.root.findByProps({ testID: 'login-password', label: 'Mật khẩu' })
+          .props.error,
+      ).toBe(true);
+    });
+  });
 });

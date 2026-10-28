@@ -18,7 +18,7 @@ jest.mock('../src/features/auth/auth-context', () => ({
   useAuth: jest.fn(),
 }));
 
-jest.mock('react-native-vector-icons/MaterialIcons', () => 'MaterialIcons');
+jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'MaterialCommunityIcons');
 
 const mockUseAuth = useAuth as jest.Mock;
 

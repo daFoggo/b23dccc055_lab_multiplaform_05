@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Icon, Surface, Text, useTheme } from 'react-native-paper';
+import { icons } from '../../../theme/icons';
 import { formatTime } from '../../../lib/format-time';
 import { colors } from '../../../theme/colors';
 import { radius, spacing } from '../../../theme/metrics';
@@ -62,7 +63,7 @@ export function MessageBubble({
         ) : null}
         {message.pending ? (
           <View accessible accessibilityLabel="Đang gửi">
-            <Icon source="clock-outline" size={12} color={foreground} />
+            <Icon source={icons.pending} size={12} color={foreground} />
           </View>
         ) : (
           <Text variant="bodySmall" style={{ color: foreground }}>

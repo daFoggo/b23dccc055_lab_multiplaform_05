@@ -13,7 +13,10 @@ jest.mock('../../auth/auth-context', () => ({ useAuth: jest.fn() }));
 jest.mock('../hooks/use-messages', () => ({ useMessages: jest.fn() }));
 jest.mock('../hooks/use-peer', () => ({ usePeer: jest.fn() }));
 jest.mock('@react-navigation/elements', () => ({ useHeaderHeight: () => 56 }));
-jest.mock('react-native-vector-icons/MaterialIcons', () => 'MaterialIcons');
+jest.mock(
+  'react-native-vector-icons/MaterialCommunityIcons',
+  () => 'MaterialCommunityIcons',
+);
 
 const send = jest.fn();
 const route = { params: { peerId: 'b', peerName: 'Bình' } };

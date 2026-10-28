@@ -11,6 +11,7 @@ import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { loginUser, mapAuthError } from '../../../services/auth-service';
 import { flatInputProps, flatStyles } from '../../../theme/component-styles';
+import { icons } from '../../../theme/icons';
 import type { RootStackParamList } from '../../../navigation/types';
 import { validateLogin } from '../validation';
 
@@ -22,6 +23,7 @@ export function LoginScreen({ navigation }: Props) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState({ email: false, password: false });
+  const [dirty, setDirty] = useState({ email: false, password: false });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -82,9 +84,10 @@ export function LoginScreen({ navigation }: Props) {
           value={email}
           onChangeText={t => {
             setEmail(t);
+            setDirty(d => ({ ...d, email: true }));
             setFormError(null);
           }}
-          onBlur={() => setTouched(t => ({ ...t, email: true }))}
+          onBlur={() => dirty.email && setTouched(t => ({ ...t, email: true }))}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
@@ -106,9 +109,12 @@ export function LoginScreen({ navigation }: Props) {
           value={password}
           onChangeText={t => {
             setPassword(t);
+            setDirty(d => ({ ...d, password: true }));
             setFormError(null);
           }}
-          onBlur={() => setTouched(t => ({ ...t, password: true }))}
+          onBlur={() =>
+            dirty.password && setTouched(t => ({ ...t, password: true }))
+          }
           secureTextEntry={!showPassword}
           autoComplete="password"
           textContentType="password"
@@ -119,7 +125,7 @@ export function LoginScreen({ navigation }: Props) {
           disabled={submitting}
           right={
             <TextInput.Icon
-              icon={showPassword ? 'eye-off' : 'eye'}
+              icon={showPassword ? icons.eyeOff : icons.eye}
               accessibilityLabel={
                 showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
               }

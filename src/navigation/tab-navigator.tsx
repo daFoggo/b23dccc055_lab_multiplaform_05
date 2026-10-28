@@ -3,20 +3,21 @@ import { CommonActions } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BottomNavigation } from 'react-native-paper';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { HomeScreen } from '../features/home/screens/home-screen';
 import { ContactsScreen } from '../features/contacts/screens/contacts-screen';
 import { NotificationsScreen } from '../features/notifications/screens/notifications-screen';
 import { SettingsScreen } from '../features/settings/screens/settings-screen';
+import { icons } from '../theme/icons';
 import type { TabParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
 const tabIcons: Record<keyof TabParamList, string> = {
-  Home: 'chat',
-  Contacts: 'contacts',
-  Notifications: 'notifications',
-  Settings: 'settings',
+  Home: icons.tabChat,
+  Contacts: icons.tabContacts,
+  Notifications: icons.tabNotifications,
+  Settings: icons.tabSettings,
 };
 
 function renderTabIcon({
@@ -27,7 +28,7 @@ function renderTabIcon({
   color: string;
 }) {
   return (
-    <MaterialIcons
+    <MaterialCommunityIcons
       name={tabIcons[route.name as keyof TabParamList]}
       size={24}
       color={color}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { IconButton, TextInput } from 'react-native-paper';
+import { icons } from '../../../theme/icons';
 import { canSend } from '../../../lib/messages';
 import { MAX_MESSAGE_LENGTH } from '../../../services/chat-service';
 import { colors } from '../../../theme/colors';
@@ -33,7 +34,7 @@ export function MessageInput({ onSend, onPressLocation }: Props) {
       {onPressLocation ? (
         <IconButton
           testID="location-button"
-          icon="map-marker-outline"
+          icon={icons.location}
           size={24}
           style={styles.button}
           accessibilityLabel="Gửi vị trí"
@@ -57,7 +58,7 @@ export function MessageInput({ onSend, onPressLocation }: Props) {
       />
       <IconButton
         testID="send-button"
-        icon="send"
+        icon={icons.send}
         size={24}
         mode="contained"
         containerColor={colors.primary}

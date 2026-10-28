@@ -38,3 +38,9 @@ Chưa có.
 ## Chưa áp dụng
 
 Dark mode, tab bar nổi, danh sách gom nhóm trong thẻ có đường kẻ.
+
+## Icon (MaterialCommunityIcons)
+
+- Toàn app dùng MaterialCommunityIcons (mặc định của Paper); tên icon tập trung ở `src/theme/icons.ts`, test `src/lib/icons.test.ts` kiểm tra tên tồn tại trong glyphmap.
+- Android: `iconFontNames` trong `android/app/build.gradle` = `MaterialCommunityIcons.ttf`.
+- iOS: đã thêm `MaterialCommunityIcons.ttf` vào `UIAppFonts` (Info.plist); chưa kiểm chứng bước copy font (build phase / Pods setup) trên iOS.

@@ -11,6 +11,7 @@ import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { mapAuthError, registerUser } from '../../../services/auth-service';
 import { flatInputProps, flatStyles } from '../../../theme/component-styles';
+import { icons } from '../../../theme/icons';
 import type { RootStackParamList } from '../../../navigation/types';
 import { validateRegister } from '../validation';
 
@@ -27,6 +28,12 @@ export function RegisterScreen({ navigation }: Props) {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState<Record<Field, boolean>>({
+    name: false,
+    email: false,
+    password: false,
+    confirm: false,
+  });
+  const [dirty, setDirty] = useState<Record<Field, boolean>>({
     name: false,
     email: false,
     password: false,
@@ -50,9 +57,15 @@ export function RegisterScreen({ navigation }: Props) {
   const show = (f: Field) => (touched[f] || submitted) && !!errors[f];
   const set = (f: Field) => (text: string) => {
     setValues(v => ({ ...v, [f]: text }));
+    setDirty(d => ({ ...d, [f]: true }));
     setFormError(null);
   };
-  const blur = (f: Field) => () => setTouched(t => ({ ...t, [f]: true }));
+  // Chi danh dau touched khi nguoi dung da go; bo qua blur tu he thong luc khoi dong.
+  const blur = (f: Field) => () => {
+    if (dirty[f]) {
+      setTouched(t => ({ ...t, [f]: true }));
+    }
+  };
 
   const submit = async () => {
     if (submitting) {
@@ -143,7 +156,7 @@ export function RegisterScreen({ navigation }: Props) {
           disabled={submitting}
           right={
             <TextInput.Icon
-              icon={showPassword ? 'eye-off' : 'eye'}
+              icon={showPassword ? icons.eyeOff : icons.eye}
               accessibilityLabel={
                 showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
               }
