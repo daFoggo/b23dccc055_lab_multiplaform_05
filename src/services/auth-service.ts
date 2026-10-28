@@ -8,10 +8,10 @@ import {
 } from 'firebase/auth';
 import {auth} from './firebase';
 import {setOffline} from './presence-service';
-import type {Unsubscribe} from './types';
+import type {AuthUser, Unsubscribe} from './types';
 import {createUserProfile} from './user-service';
 
-export type AuthUser = {uid: string; name: string; email: string};
+export type {AuthUser};
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 

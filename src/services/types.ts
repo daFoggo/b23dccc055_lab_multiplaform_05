@@ -29,3 +29,5 @@ export type ConversationSummary = {
 };
 
 export type Unsubscribe = () => void;
+
+export type AuthUser = {uid: string; name: string; email: string};
