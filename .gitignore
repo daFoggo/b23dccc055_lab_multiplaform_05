@@ -1,0 +1,5 @@
+node_modules/
+.superpowers/
+build/
+.gradle
+Pods/
