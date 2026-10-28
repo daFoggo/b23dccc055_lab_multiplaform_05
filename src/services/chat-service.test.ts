@@ -12,6 +12,7 @@ import {
   update,
 } from 'firebase/database';
 import {
+  MAX_MESSAGE_LENGTH,
   loadOlderMessages,
   markRead,
   sendLocationMessage,
@@ -103,6 +104,41 @@ describe('sendTextMessage', () => {
   });
 });
 
+describe('send limits and preview', () => {
+  it('rejects text over 2000 chars before touching firebase', async () => {
+    expect(MAX_MESSAGE_LENGTH).toBe(2000);
+    await expect(sendTextMessage(me, peer, 'x'.repeat(2001))).rejects.toThrow(
+      'Tin nhắn quá dài (tối đa 2000 ký tự)',
+    );
+    expect(push).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+    await sendTextMessage(me, peer, 'x'.repeat(2000));
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it('truncates preview by code points, not splitting emoji', async () => {
+    const text = 'a'.repeat(199) + '😀' + 'b';
+    await sendTextMessage(me, peer, text);
+    const [, data] = (update as jest.Mock).mock.calls[0];
+    expect(data['userChats/u2/u1/lastMessage']).toBe('a'.repeat(199) + '😀');
+  });
+
+  it.each([
+    [91, 0],
+    [-91, 0],
+    [0, 181],
+    [0, -181],
+    [NaN, 0],
+    [0, Infinity],
+  ])('rejects invalid location %p,%p', async (lat, lng) => {
+    await expect(sendLocationMessage(me, peer, { lat, lng })).rejects.toThrow(
+      'Vị trí không hợp lệ',
+    );
+    expect(push).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+});
+
 describe('sendLocationMessage', () => {
   it('writes location message and preview', async () => {
     await sendLocationMessage(me, peer, { lat: 21.0285, lng: 105.8542 });
@@ -186,6 +222,46 @@ describe('subscribeMessages / loadOlderMessages', () => {
     expect(endBefore).toHaveBeenCalledWith(100);
     expect(limitToLast).toHaveBeenCalledWith(30);
     expect(res.map(m => m.id)).toEqual(['x', 'y']);
+  });
+});
+
+describe('ordering and pagination keys', () => {
+  it('sorts ties on createdAt by id', () => {
+    let handler: (s: unknown) => void = () => {};
+    (onValue as jest.Mock).mockImplementation((_q, cb) => {
+      handler = cb;
+      return jest.fn();
+    });
+    const cb = jest.fn();
+    subscribeMessages('u1_u2', 30, cb);
+    handler({
+      val: () => ({
+        z: { senderId: 'u1', type: 'text', text: 'z', createdAt: 5 },
+        a: { senderId: 'u1', type: 'text', text: 'a', createdAt: 5 },
+        m: { senderId: 'u1', type: 'text', text: 'm', createdAt: 5 },
+      }),
+    });
+    expect(cb.mock.calls[0][0].map((m: { id: string }) => m.id)).toEqual([
+      'a',
+      'm',
+      'z',
+    ]);
+  });
+
+  it('loadOlderMessages passes beforeKey to endBefore and orders query args', async () => {
+    (get as jest.Mock).mockResolvedValue({ val: () => null });
+    (query as jest.Mock).mockReturnValue('Q');
+    (orderByChild as jest.Mock).mockReturnValue('O');
+    (endBefore as jest.Mock).mockReturnValue('E');
+    (limitToLast as jest.Mock).mockReturnValue('L');
+    await loadOlderMessages('u1_u2', 100, 30, 'k9');
+    expect(endBefore).toHaveBeenCalledWith(100, 'k9');
+    expect(query).toHaveBeenCalledWith(
+      { path: 'chats/u1_u2/messages' },
+      'O',
+      'E',
+      'L',
+    );
   });
 });
 

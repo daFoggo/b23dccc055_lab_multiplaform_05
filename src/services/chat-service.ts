@@ -13,6 +13,7 @@ import {
   update,
 } from 'firebase/database';
 import { getChatId } from '../lib/chat-id';
+import { isValidCoords } from '../lib/maps';
 import { canSend } from '../lib/messages';
 import { db } from './firebase';
 import type {
@@ -24,6 +25,7 @@ import type {
 
 export type Party = { uid: string; name: string };
 
+export const MAX_MESSAGE_LENGTH = 2000;
 const PREVIEW_MAX = 200;
 const LOCATION_PREVIEW = '📍 Vị trí';
 
@@ -68,7 +70,10 @@ function toMessage(id: string, raw: RawMessage): ChatMessage {
 function toMessages(val: Record<string, RawMessage> | null): ChatMessage[] {
   return Object.entries(val ?? {})
     .map(([id, raw]) => toMessage(id, raw))
-    .sort((a, b) => a.createdAt - b.createdAt);
+    .sort(
+      (a, b) =>
+        a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    );
 }
 
 function guardError(isActive: () => boolean, onError?: (e: Error) => void) {
@@ -108,8 +113,9 @@ async function send(me: Party, peer: Party, payload: Payload): Promise<void> {
     [`${theirs}/lastAt`]: serverTimestamp(),
   });
   try {
-    await runTransaction(ref(db, `${theirs}/unread`), current =>
-      ((current as number | null) ?? 0) + 1,
+    await runTransaction(
+      ref(db, `${theirs}/unread`),
+      current => ((current as number | null) ?? 0) + 1,
     );
   } catch {
     // Intentionally ignored: see comment above.
@@ -125,6 +131,9 @@ export async function sendTextMessage(
     throw new Error('Tin nhắn trống');
   }
   const trimmed = text.trim();
+  if (trimmed.length > MAX_MESSAGE_LENGTH) {
+    throw new Error(`Tin nhắn quá dài (tối đa ${MAX_MESSAGE_LENGTH} ký tự)`);
+  }
   await send(me, peer, {
     message: {
       senderId: me.uid,
@@ -132,7 +141,7 @@ export async function sendTextMessage(
       text: trimmed,
       createdAt: serverTimestamp(),
     },
-    lastMessage: trimmed.slice(0, PREVIEW_MAX),
+    lastMessage: Array.from(trimmed).slice(0, PREVIEW_MAX).join(''),
     lastType: 'text',
   });
 }
@@ -142,6 +151,9 @@ export async function sendLocationMessage(
   peer: Party,
   coords: { lat: number; lng: number },
 ): Promise<void> {
+  if (!isValidCoords(coords.lat, coords.lng)) {
+    throw new Error('Vị trí không hợp lệ');
+  }
   await send(me, peer, {
     message: {
       senderId: me.uid,
@@ -186,12 +198,15 @@ export async function loadOlderMessages(
   chatId: string,
   beforeCreatedAt: number,
   limit: number,
+  beforeKey?: string,
 ): Promise<ChatMessage[]> {
   const snapshot = await get(
     query(
       ref(db, `chats/${chatId}/messages`),
       orderByChild('createdAt'),
-      endBefore(beforeCreatedAt),
+      beforeKey === undefined
+        ? endBefore(beforeCreatedAt)
+        : endBefore(beforeCreatedAt, beforeKey),
       limitToLast(limit),
     ),
   );

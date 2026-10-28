@@ -34,9 +34,26 @@ describe('groupByDay', () => {
       ],
       now,
     );
-    expect(
-      items.map(i => (i.type === 'day' ? i.label : i.message.id)),
-    ).toEqual(['26/10/2026', '1', '2', 'Hôm qua', '3', 'Hôm nay', '4']);
+    expect(items.map(i => (i.type === 'day' ? i.label : i.message.id))).toEqual(
+      ['26/10/2026', '1', '2', 'Hôm qua', '3', 'Hôm nay', '4'],
+    );
+    const keys = items.flatMap(i => (i.type === 'day' ? [i.key] : []));
+    expect(new Set(keys).size).toBe(3);
+  });
+
+  it('sorts unsorted input ascending (stable by id) with unique day keys', () => {
+    const items = groupByDay(
+      [
+        msg('4', at(28, 9)),
+        msg('b', at(26, 9)),
+        msg('a', at(26, 9)),
+        msg('3', at(27, 9)),
+      ],
+      now,
+    );
+    expect(items.map(i => (i.type === 'day' ? i.label : i.message.id))).toEqual(
+      ['26/10/2026', 'a', 'b', 'Hôm qua', '3', 'Hôm nay', '4'],
+    );
     const keys = items.flatMap(i => (i.type === 'day' ? [i.key] : []));
     expect(new Set(keys).size).toBe(3);
   });

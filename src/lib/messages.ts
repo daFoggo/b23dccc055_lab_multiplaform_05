@@ -19,7 +19,11 @@ function dayKey(ms: number): string {
 export function groupByDay(messages: ChatMessage[], now: number): ListItem[] {
   const items: ListItem[] = [];
   let lastKey = '';
-  for (const message of messages) {
+  const sorted = [...messages].sort(
+    (a, b) =>
+      a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+  );
+  for (const message of sorted) {
     const key = dayKey(message.createdAt);
     if (key !== lastKey) {
       items.push({
