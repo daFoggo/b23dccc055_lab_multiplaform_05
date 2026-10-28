@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BottomNavigation } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useConversationsContext } from '../features/home/conversations-context';
 import { HomeScreen } from '../features/home/screens/home-screen';
 import { ContactsScreen } from '../features/contacts/screens/contacts-screen';
 import { NotificationsScreen } from '../features/notifications/screens/notifications-screen';
@@ -76,12 +77,21 @@ function PaperTabBar({
 }
 
 export function TabNavigator() {
+  const { totalUnread } = useConversationsContext();
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }} tabBar={PaperTabBar}>
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: 'Trò chuyện' }}
+        options={{
+          title: 'Trò chuyện',
+          tabBarBadge:
+            totalUnread > 0
+              ? totalUnread > 99
+                ? '99+'
+                : totalUnread
+              : undefined,
+        }}
       />
       <Tab.Screen
         name="Contacts"

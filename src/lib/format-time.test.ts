@@ -1,4 +1,9 @@
-import { formatDayLabel, formatLastSeen, formatTime } from './format-time';
+import {
+  formatConversationTime,
+  formatDayLabel,
+  formatLastSeen,
+  formatTime,
+} from './format-time';
 
 const at = (d: number, h = 12, m = 0) => new Date(2026, 9, d, h, m).getTime();
 
@@ -23,4 +28,28 @@ test('formatLastSeen', () => {
     'Hoạt động 2 ngày trước',
   );
   expect(formatLastSeen(now - 30 * 86400000, now)).toBe('Hoạt động 28/09/2026');
+});
+
+describe('formatConversationTime', () => {
+  const now = at(28, 15); // Wed 28/10/2026
+
+  test('same day shows HH:mm', () => {
+    expect(formatConversationTime(at(28, 9, 5), now)).toBe('09:05');
+  });
+  test('yesterday', () => {
+    expect(formatConversationTime(at(27, 23), now)).toBe('Hôm qua');
+  });
+  test('older within the week shows short weekday', () => {
+    expect(formatConversationTime(at(26, 8), now)).toBe('T2');
+    expect(formatConversationTime(at(25, 8), now)).toBe('CN');
+    expect(formatConversationTime(at(22, 8), now)).toBe('T5');
+  });
+  test('a week or more shows dd/mm/yyyy', () => {
+    expect(formatConversationTime(at(21, 8), now)).toBe('21/10/2026');
+    expect(formatConversationTime(at(3, 8), now)).toBe('03/10/2026');
+  });
+  test('future timestamps fall back to HH:mm when same day, else date', () => {
+    expect(formatConversationTime(at(28, 23), now)).toBe('23:00');
+    expect(formatConversationTime(at(30, 8), now)).toBe('30/10/2026');
+  });
 });

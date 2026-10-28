@@ -53,3 +53,21 @@ export function formatLastSeen(
   }
   return `Hoạt động ${formatDate(lastSeen)}`;
 }
+
+const WEEKDAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
+export function formatConversationTime(ms: number, now: number): string {
+  const today = startOfDay(now);
+  const day = startOfDay(ms);
+  if (day === today) {
+    return formatTime(ms);
+  }
+  const diffDays = Math.round((today - day) / 86400000);
+  if (diffDays === 1) {
+    return 'Hôm qua';
+  }
+  if (diffDays > 1 && diffDays < 7) {
+    return WEEKDAYS[new Date(ms).getDay()];
+  }
+  return formatDate(ms);
+}

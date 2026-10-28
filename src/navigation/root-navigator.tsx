@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../features/auth/auth-context';
 import { LoginScreen } from '../features/auth/screens/login-screen';
 import { RegisterScreen } from '../features/auth/screens/register-screen';
+import { ConversationsProvider } from '../features/home/conversations-context';
 import { ChatScreen } from '../features/chat/screens/chat-screen';
 import { TabNavigator } from './tab-navigator';
 import type { RootStackParamList } from './types';
@@ -23,35 +24,37 @@ export function RootNavigator() {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShadowVisible: false }}>
-      {user ? (
-        <>
-          <Stack.Screen
-            name="Tabs"
-            component={TabNavigator}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Chat"
-            component={ChatScreen}
-            options={({ route }) => ({ title: route.params.peerName })}
-          />
-        </>
-      ) : (
-        <>
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Register"
-            component={RegisterScreen}
-            options={{ headerShown: false }}
-          />
-        </>
-      )}
-    </Stack.Navigator>
+    <ConversationsProvider>
+      <Stack.Navigator screenOptions={{ headerShadowVisible: false }}>
+        {user ? (
+          <>
+            <Stack.Screen
+              name="Tabs"
+              component={TabNavigator}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Chat"
+              component={ChatScreen}
+              options={({ route }) => ({ title: route.params.peerName })}
+            />
+          </>
+        ) : (
+          <>
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Register"
+              component={RegisterScreen}
+              options={{ headerShown: false }}
+            />
+          </>
+        )}
+      </Stack.Navigator>
+    </ConversationsProvider>
   );
 }
 
