@@ -1,4 +1,4 @@
-import {validateLogin, validateRegister} from './validation';
+import { validateLogin, validateRegister } from './validation';
 
 const valid = {
   name: 'An',
@@ -9,34 +9,42 @@ const valid = {
 
 describe('validateRegister', () => {
   it('flags empty name', () => {
-    expect(validateRegister({...valid, name: '   '}).name).toBeDefined();
+    expect(validateRegister({ ...valid, name: '   ' }).name).toBeDefined();
+  });
+  it('flags a 51-char name', () => {
+    expect(
+      validateRegister({ ...valid, name: 'a'.repeat(51) }).name,
+    ).toBeDefined();
   });
   it('flags invalid email', () => {
-    expect(validateRegister({...valid, email: 'abc'}).email).toBeDefined();
+    expect(validateRegister({ ...valid, email: 'abc' }).email).toBeDefined();
   });
   it('flags short password', () => {
-    expect(validateRegister({...valid, password: '12345', confirm: '12345'}).password).toBe(
-      'Mật khẩu tối thiểu 6 ký tự.',
-    );
+    expect(
+      validateRegister({ ...valid, password: '12345', confirm: '12345' })
+        .password,
+    ).toBe('Mật khẩu tối thiểu 6 ký tự.');
   });
   it('flags mismatched confirm', () => {
-    expect(validateRegister({...valid, confirm: 'x'}).confirm).toBeDefined();
+    expect(validateRegister({ ...valid, confirm: 'x' }).confirm).toBeDefined();
   });
   it('returns {} when valid', () => {
     expect(validateRegister(valid)).toEqual({});
   });
   it('accepts email with surrounding spaces', () => {
-    expect(validateRegister({...valid, email: ' A@B.com '})).toEqual({});
+    expect(validateRegister({ ...valid, email: ' A@B.com ' })).toEqual({});
   });
 });
 
 describe('validateLogin', () => {
   it('flags bad email and short password', () => {
-    const e = validateLogin({email: 'x', password: '1'});
+    const e = validateLogin({ email: 'x', password: '1' });
     expect(e.email).toBeDefined();
     expect(e.password).toBeDefined();
   });
   it('returns {} when valid', () => {
-    expect(validateLogin({email: ' A@B.com ', password: '123456'})).toEqual({});
+    expect(validateLogin({ email: ' A@B.com ', password: '123456' })).toEqual(
+      {},
+    );
   });
 });

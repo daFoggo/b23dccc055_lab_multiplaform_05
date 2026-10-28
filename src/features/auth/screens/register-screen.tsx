@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -7,18 +7,18 @@ import {
   TextInput as RNTextInput,
   View,
 } from 'react-native';
-import {Button, HelperText, Text, TextInput} from 'react-native-paper';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {mapAuthError, registerUser} from '../../../services/auth-service';
-import {flatInputProps, flatStyles} from '../../../theme/component-styles';
-import type {RootStackParamList} from '../../../navigation/types';
-import {validateRegister} from '../validation';
+import { Button, HelperText, Text, TextInput } from 'react-native-paper';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { mapAuthError, registerUser } from '../../../services/auth-service';
+import { flatInputProps, flatStyles } from '../../../theme/component-styles';
+import type { RootStackParamList } from '../../../navigation/types';
+import { validateRegister } from '../validation';
 
 type TextInputRef = React.ComponentRef<typeof RNTextInput>;
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 type Field = 'name' | 'email' | 'password' | 'confirm';
 
-export function RegisterScreen({navigation}: Props) {
+export function RegisterScreen({ navigation }: Props) {
   const [values, setValues] = useState({
     name: '',
     email: '',
@@ -36,14 +36,23 @@ export function RegisterScreen({navigation}: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const emailRef = useRef<TextInputRef>(null);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const passwordRef = useRef<TextInputRef>(null);
   const confirmRef = useRef<TextInputRef>(null);
 
   const errors = validateRegister(values);
   const show = (f: Field) => (touched[f] || submitted) && !!errors[f];
-  const set = (f: Field) => (text: string) =>
-    setValues(v => ({...v, [f]: text}));
-  const blur = (f: Field) => () => setTouched(t => ({...t, [f]: true}));
+  const set = (f: Field) => (text: string) => {
+    setValues(v => ({ ...v, [f]: text }));
+    setFormError(null);
+  };
+  const blur = (f: Field) => () => setTouched(t => ({ ...t, [f]: true }));
 
   const submit = async () => {
     if (submitting) {
@@ -58,25 +67,34 @@ export function RegisterScreen({navigation}: Props) {
     try {
       await registerUser(values.name, values.email, values.password);
     } catch (e) {
-      const code = (e as {code?: string}).code;
-      setFormError(code ? mapAuthError(code) : (e as Error).message);
-      setSubmitting(false);
+      const code = (e as { code?: string }).code;
+      if (mounted.current) {
+        setFormError(code ? mapAuthError(code) : (e as Error).message);
+      }
+    } finally {
+      if (mounted.current) {
+        setSubmitting(false);
+      }
     }
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+      >
         <Text variant="headlineMedium" style={styles.title}>
           Đăng ký
         </Text>
         <TextInput
           {...flatInputProps}
           label="Tên hiển thị"
+          autoComplete="name"
+          textContentType="name"
           value={values.name}
           onChangeText={set('name')}
           onBlur={blur('name')}
@@ -98,6 +116,8 @@ export function RegisterScreen({navigation}: Props) {
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
+          autoComplete="email"
+          textContentType="emailAddress"
           returnKeyType="next"
           onSubmitEditing={() => passwordRef.current?.focus()}
           error={show('email')}
@@ -110,6 +130,8 @@ export function RegisterScreen({navigation}: Props) {
           {...flatInputProps}
           ref={passwordRef}
           label="Mật khẩu"
+          autoComplete="password-new"
+          textContentType="newPassword"
           value={values.password}
           onChangeText={set('password')}
           onBlur={blur('password')}
@@ -122,6 +144,9 @@ export function RegisterScreen({navigation}: Props) {
           right={
             <TextInput.Icon
               icon={showPassword ? 'eye-off' : 'eye'}
+              accessibilityLabel={
+                showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
+              }
               onPress={() => setShowPassword(s => !s)}
             />
           }
@@ -133,6 +158,8 @@ export function RegisterScreen({navigation}: Props) {
           {...flatInputProps}
           ref={confirmRef}
           label="Nhập lại mật khẩu"
+          autoComplete="password-new"
+          textContentType="newPassword"
           value={values.confirm}
           onChangeText={set('confirm')}
           onBlur={blur('confirm')}
@@ -155,14 +182,16 @@ export function RegisterScreen({navigation}: Props) {
           loading={submitting}
           disabled={submitting}
           style={flatStyles.buttonShape}
-          contentStyle={flatStyles.buttonContent}>
+          contentStyle={flatStyles.buttonContent}
+        >
           Đăng ký
         </Button>
         <View style={styles.link}>
           <Button
             mode="text"
             onPress={() => navigation.navigate('Login')}
-            disabled={submitting}>
+            disabled={submitting}
+          >
             Đã có tài khoản? Đăng nhập
           </Button>
         </View>
@@ -172,9 +201,9 @@ export function RegisterScreen({navigation}: Props) {
 }
 
 const styles = StyleSheet.create({
-  flex: {flex: 1},
-  content: {flexGrow: 1, justifyContent: 'center', padding: 24},
-  title: {marginBottom: 24},
-  formError: {marginBottom: 8},
-  link: {alignItems: 'center', marginTop: 16},
+  flex: { flex: 1 },
+  content: { flexGrow: 1, justifyContent: 'center', padding: 24 },
+  title: { marginBottom: 24 },
+  formError: { marginBottom: 8 },
+  link: { alignItems: 'center', marginTop: 16 },
 });

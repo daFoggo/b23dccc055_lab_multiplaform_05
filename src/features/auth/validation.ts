@@ -4,7 +4,7 @@ export type RegisterValues = {
   password: string;
   confirm: string;
 };
-export type LoginValues = {email: string; password: string};
+export type LoginValues = { email: string; password: string };
 
 export type RegisterErrors = Partial<
   Record<'name' | 'email' | 'password' | 'confirm', string>

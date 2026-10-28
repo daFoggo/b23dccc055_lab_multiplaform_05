@@ -1,12 +1,15 @@
-import React, {createContext, useContext, useEffect, useState} from 'react';
-import {subscribeAuth} from '../../services/auth-service';
-import type {AuthUser} from '../../services/types';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { subscribeAuth } from '../../services/auth-service';
+import type { AuthUser } from '../../services/types';
 
-type AuthState = {user: AuthUser | null; initializing: boolean};
+type AuthState = { user: AuthUser | null; initializing: boolean };
 
-const AuthContext = createContext<AuthState>({user: null, initializing: true});
+const AuthContext = createContext<AuthState>({
+  user: null,
+  initializing: true,
+});
 
-export function AuthProvider({children}: {children: React.ReactNode}) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
     initializing: true,
@@ -14,7 +17,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 
   useEffect(() => {
     const unsubscribe = subscribeAuth(user =>
-      setState({user, initializing: false}),
+      setState({ user, initializing: false }),
     );
     return unsubscribe;
   }, []);
