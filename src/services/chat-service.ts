@@ -46,6 +46,19 @@ type RawConversation = {
   unread?: number;
 };
 
+// Rules compare string `.length` (UTF-16 units), so cap by units but never
+// split a surrogate pair.
+function truncatePreview(text: string): string {
+  let out = '';
+  for (const ch of Array.from(text)) {
+    if (out.length + ch.length > PREVIEW_MAX) {
+      break;
+    }
+    out += ch;
+  }
+  return out;
+}
+
 function toMessage(id: string, raw: RawMessage): ChatMessage {
   const message: ChatMessage = {
     id,
@@ -131,6 +144,7 @@ export async function sendTextMessage(
     throw new Error('Tin nhắn trống');
   }
   const trimmed = text.trim();
+  // `.length` (UTF-16 units) on purpose: it matches the database rules.
   if (trimmed.length > MAX_MESSAGE_LENGTH) {
     throw new Error(`Tin nhắn quá dài (tối đa ${MAX_MESSAGE_LENGTH} ký tự)`);
   }
@@ -141,7 +155,7 @@ export async function sendTextMessage(
       text: trimmed,
       createdAt: serverTimestamp(),
     },
-    lastMessage: Array.from(trimmed).slice(0, PREVIEW_MAX).join(''),
+    lastMessage: truncatePreview(trimmed),
     lastType: 'text',
   });
 }

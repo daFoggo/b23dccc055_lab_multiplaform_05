@@ -116,11 +116,21 @@ describe('send limits and preview', () => {
     expect(update).toHaveBeenCalledTimes(1);
   });
 
-  it('truncates preview by code points, not splitting emoji', async () => {
+  it('never splits a surrogate pair at the 200-unit boundary', async () => {
     const text = 'a'.repeat(199) + '😀' + 'b';
     await sendTextMessage(me, peer, text);
     const [, data] = (update as jest.Mock).mock.calls[0];
-    expect(data['userChats/u2/u1/lastMessage']).toBe('a'.repeat(199) + '😀');
+    expect(data['userChats/u2/u1/lastMessage']).toBe('a'.repeat(199));
+  });
+
+  it('keeps preview within 200 UTF-16 units without lone surrogates', async () => {
+    await sendTextMessage(me, peer, '😀'.repeat(150));
+    const preview = (update as jest.Mock).mock.calls[0][1][
+      'userChats/u2/u1/lastMessage'
+    ] as string;
+    expect(preview.length).toBeLessThanOrEqual(200);
+    expect(preview).toBe('😀'.repeat(100));
+    expect(Array.from(preview).every(c => c.length === 2)).toBe(true);
   });
 
   it.each([
