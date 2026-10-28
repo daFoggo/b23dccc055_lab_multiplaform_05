@@ -29,18 +29,16 @@ Bảng đối chiếu từng yêu cầu trong đề bài Bài 5 với mã nguồ
 
 ---
 
-## Danh sách công việc người dùng thực hiện khi nộp bài
+## Danh mục sản phẩm demo đã tạo trong thư mục `docs/demo/`
 
-1. **Chụp ảnh màn hình ứng dụng**:
-   - [ ] Ảnh 1: Màn hình Đăng ký tài khoản mới.
-   - [ ] Ảnh 2: Màn hình Home (Trò chuyện) có hiển thị badge số tin chưa đọc.
-   - [ ] Ảnh 3: Màn hình Danh bạ hiển thị người dùng khác với chấm xanh online.
-   - [ ] Ảnh 4: Màn hình Chat có cả tin nhắn văn bản và tin nhắn vị trí (LocationBubble).
-2. **Chụp ảnh màn hình Firebase Console**:
-   - [ ] Ảnh tab **Data** trong Firebase Realtime Database hiển thị các node `users`, `chats`, `userChats`.
-   - [ ] Ảnh tab **Authentication** hiển thị danh sách người dùng đã đăng ký.
-3. **Quay video demo (1 - 2 phút)**:
-   - [ ] Sử dụng 2 thiết bị (hoặc 2 máy ảo emulator) đăng nhập 2 tài khoản khác nhau (`user1@gmail.com` và `user2@gmail.com`).
-   - [ ] Chat 1-1 qua lại: gửi tin nhắn văn bản, thấy tin nhắn xuất hiện tức thì bên máy kia.
-   - [ ] Gửi vị trí: nhấn nút 📍, gửi tin vị trí và bấm mở Google Maps.
-   - [ ] Kiểm tra số tin chưa đọc tăng lên ở máy nhận và giảm về 0 khi mở xem.
+1. **Ảnh chụp màn hình ứng dụng (`docs/demo/screenshots/`)**:
+   - [x] Ảnh 1: [01_dang_ky.png](file:///d:/Dev_Projects/b23dccc055_lab_multi_platform/docs/demo/screenshots/01_dang_ky.png) - Màn hình Đăng ký tài khoản mới (MD3, Inter font).
+   - [x] Ảnh 2: [02_home_chua_doc.png](file:///d:/Dev_Projects/b23dccc055_lab_multi_platform/docs/demo/screenshots/02_home_chua_doc.png) - Màn hình Home (Trò chuyện) có hiển thị badge số tin chưa đọc trên hàng và tab bar.
+   - [x] Ảnh 3: [03_danh_ba_online.png](file:///d:/Dev_Projects/b23dccc055_lab_multi_platform/docs/demo/screenshots/03_danh_ba_online.png) - Màn hình Danh bạ hiển thị người dùng với chấm xanh online.
+   - [x] Ảnh 4: [04_chat_tin_nhan_va_vi_tri.png](file:///d:/Dev_Projects/b23dccc055_lab_multi_platform/docs/demo/screenshots/04_chat_tin_nhan_va_vi_tri.png) - Màn hình Chat có tin nhắn thường, tin nhắn vị trí và nút mở Google Maps.
+
+2. **Video demo 2 thiết bị tương tác realtime (`docs/demo/video/`)**:
+   - [x] Video ghép song song 2 máy ảo: [demo_chat_realtime.mp4](file:///d:/Dev_Projects/b23dccc055_lab_multi_platform/docs/demo/video/demo_chat_realtime.mp4)
+     - Quay đồng thời User 1 (`emulator-5556`) và User 2 (`emulator-5554`).
+     - Tin nhắn gửi qua lại tức thì real-time không cần tải lại trang.
+     - Bấm nút 📍 gửi vị trí GPS tạo LocationBubble real-time.

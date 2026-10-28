@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /d/Dev_Projects/MidTermTest && ls docs docs/* .github .superpowers __tests__ | head -50; cat App.tsx .gitignore README.md app.json index.js jest.config.js jest.setup.js jest.global-setup.js babel.config.js tsconfig.json; du -sh android ios 2>/dev/null; ls android ios)"
+    ]
+  }
+}
