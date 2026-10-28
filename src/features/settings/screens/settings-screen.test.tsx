@@ -115,3 +115,58 @@ it('double tap on confirm calls once', async () => {
   expect(mockLogout).toHaveBeenCalledTimes(1);
   await act(async () => resolve());
 });
+
+it('after failure loading resets and a second confirm logs out again', async () => {
+  mockLogout.mockRejectedValueOnce(new Error('x'));
+  mockLogout.mockResolvedValueOnce(undefined);
+  const r = await setup();
+  await press(r, 'logout-button');
+  await press(r, 'logout-confirm');
+  expect(text(r)).toContain('Đăng xuất thất bại. Thử lại.');
+  expect(r.root.findByType(Dialog).props.visible).toBe(true);
+  expect(r.root.findByProps({ testID: 'logout-confirm' }).props.loading).toBe(
+    false,
+  );
+  await press(r, 'logout-confirm');
+  expect(mockLogout).toHaveBeenCalledTimes(2);
+});
+
+it('cannot dismiss dialog while logout is pending', async () => {
+  let resolve!: () => void;
+  mockLogout.mockReturnValue(new Promise<void>(res => (resolve = res)));
+  const r = await setup();
+  await press(r, 'logout-button');
+  await press(r, 'logout-confirm');
+  const dialog = r.root.findByType(Dialog);
+  expect(dialog.props.dismissable).toBe(false);
+  await act(async () => dialog.props.onDismiss());
+  expect(r.root.findByType(Dialog).props.visible).toBe(true);
+  expect(r.root.findByProps({ testID: 'logout-cancel' }).props.disabled).toBe(
+    true,
+  );
+  expect(r.root.findByProps({ testID: 'logout-confirm' }).props.disabled).toBe(
+    true,
+  );
+  await act(async () => resolve());
+});
+
+it('no state update or console.error when unmounted after success', async () => {
+  const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  let resolve!: () => void;
+  mockLogout.mockReturnValue(new Promise<void>(res => (resolve = res)));
+  const r = await setup();
+  await press(r, 'logout-button');
+  await press(r, 'logout-confirm');
+  await act(async () => r.unmount());
+  current = undefined;
+  await act(async () => resolve());
+  expect(spy).not.toHaveBeenCalled();
+  spy.mockRestore();
+});
+
+it('accessibility label on logout button', async () => {
+  const r = await setup();
+  expect(
+    r.root.findByProps({ testID: 'logout-button' }).props.accessibilityLabel,
+  ).toBe('Đăng xuất');
+});

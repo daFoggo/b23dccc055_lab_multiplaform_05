@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
   Avatar,
@@ -32,6 +32,14 @@ export function SettingsScreen() {
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const busy = useRef(false);
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const confirm = async () => {
     if (busy.current) {
@@ -41,13 +49,19 @@ export function SettingsScreen() {
     setLoading(true);
     try {
       await logoutUser();
-      // Thanh cong: auth state doi -> RootNavigator tu hien man Dang nhap.
+      // Thanh cong: auth state doi -> RootNavigator go man hinh nay; khong set state.
     } catch {
-      setConfirmOpen(false);
-      setFailed(true);
-    } finally {
       busy.current = false;
-      setLoading(false);
+      if (mounted.current) {
+        setLoading(false);
+        setFailed(true);
+      }
+    }
+  };
+
+  const dismiss = () => {
+    if (!busy.current) {
+      setConfirmOpen(false);
     }
   };
 
@@ -85,6 +99,7 @@ export function SettingsScreen() {
       </Surface>
       <Button
         testID="logout-button"
+        accessibilityLabel="Đăng xuất"
         mode="outlined"
         icon={icons.logout}
         textColor={theme.colors.error}
@@ -97,7 +112,8 @@ export function SettingsScreen() {
       <Portal>
         <Dialog
           visible={confirmOpen}
-          onDismiss={() => !loading && setConfirmOpen(false)}
+          dismissable={!loading}
+          onDismiss={dismiss}
         >
           <Dialog.Title>Đăng xuất khỏi tài khoản?</Dialog.Title>
           <Dialog.Actions>
@@ -110,6 +126,7 @@ export function SettingsScreen() {
             </Button>
             <Button
               testID="logout-confirm"
+              disabled={loading}
               textColor={theme.colors.error}
               loading={loading}
               onPress={confirm}
