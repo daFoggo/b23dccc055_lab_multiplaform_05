@@ -18,6 +18,7 @@ jest.mock('firebase/auth', () => ({
   signInWithEmailAndPassword: jest.fn(),
   signOut: jest.fn(),
   updateProfile: jest.fn(),
+  deleteUser: jest.fn(),
   onAuthStateChanged: jest.fn(),
 }));
 

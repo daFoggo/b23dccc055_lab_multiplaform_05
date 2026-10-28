@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
@@ -20,13 +21,26 @@ export async function registerUser(
   password: string,
 ): Promise<void> {
   const displayName = name.trim();
+  if (displayName.length < 1 || displayName.length > 50) {
+    throw new Error('Tên phải từ 1 đến 50 ký tự.');
+  }
   const cred = await createUserWithEmailAndPassword(
     auth,
     normalizeEmail(email),
     password,
   );
-  await updateProfile(cred.user, {displayName});
-  await createUserProfile(cred.user.uid, displayName);
+  try {
+    await updateProfile(cred.user, {displayName});
+    await createUserProfile(cred.user.uid, displayName);
+  } catch (e) {
+    // Avoid an orphan account / profile-less signed-in user.
+    try {
+      await deleteUser(cred.user);
+    } catch {
+      // ignore
+    }
+    throw e;
+  }
 }
 
 export async function loginUser(

@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
@@ -90,6 +91,41 @@ describe('registerUser', () => {
   });
 });
 
+describe('registerUser failures', () => {
+  it('rejects empty or too long names before creating the account', async () => {
+    await expect(registerUser('   ', 'a@b.com', 'secret1')).rejects.toThrow(
+      'Tên phải từ 1 đến 50 ký tự.',
+    );
+    await expect(
+      registerUser('x'.repeat(51), 'a@b.com', 'secret1'),
+    ).rejects.toThrow('Tên phải từ 1 đến 50 ký tự.');
+    expect(createUserWithEmailAndPassword).not.toHaveBeenCalled();
+  });
+
+  it('deletes the new user and rethrows when createUserProfile fails', async () => {
+    const user = {uid: 'u9'};
+    const err = new Error('rules denied');
+    m(createUserWithEmailAndPassword).mockResolvedValue({user});
+    m(updateProfile).mockResolvedValue(undefined);
+    m(createUserProfile).mockRejectedValue(err);
+    m(deleteUser).mockResolvedValue(undefined);
+    await expect(registerUser('An', 'a@b.com', 'secret1')).rejects.toBe(err);
+    expect(deleteUser).toHaveBeenCalledTimes(1);
+    expect(deleteUser).toHaveBeenCalledWith(user);
+  });
+
+  it('deletes the new user and rethrows when updateProfile fails, ignoring delete errors', async () => {
+    const user = {uid: 'u9'};
+    const err = new Error('boom');
+    m(createUserWithEmailAndPassword).mockResolvedValue({user});
+    m(updateProfile).mockRejectedValue(err);
+    m(deleteUser).mockRejectedValue(new Error('delete failed'));
+    await expect(registerUser('An', 'a@b.com', 'secret1')).rejects.toBe(err);
+    expect(deleteUser).toHaveBeenCalledTimes(1);
+    expect(createUserProfile).not.toHaveBeenCalled();
+  });
+});
+
 describe('logoutUser', () => {
   it('sets offline before signOut', async () => {
     m(setOffline).mockResolvedValue(undefined);
@@ -105,6 +141,19 @@ describe('logoutUser', () => {
     m(setOffline).mockRejectedValue(new Error('denied'));
     m(signOut).mockResolvedValue(undefined);
     await expect(logoutUser()).resolves.toBeUndefined();
+    expect(signOut).toHaveBeenCalled();
+  });
+});
+
+describe('logoutUser without user', () => {
+  it('skips setOffline but still signs out', async () => {
+    const fb = jest.requireMock('./firebase');
+    const saved = fb.auth.currentUser;
+    fb.auth.currentUser = null;
+    m(signOut).mockResolvedValue(undefined);
+    await logoutUser();
+    fb.auth.currentUser = saved;
+    expect(setOffline).not.toHaveBeenCalled();
     expect(signOut).toHaveBeenCalled();
   });
 });
