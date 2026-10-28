@@ -37,5 +37,6 @@ jest.mock('firebase/database', () => ({
   query: jest.fn(),
   orderByChild: jest.fn(),
   limitToLast: jest.fn(),
+  endBefore: jest.fn(),
   serverTimestamp: jest.fn(() => ({'.sv': 'timestamp'})),
 }));
