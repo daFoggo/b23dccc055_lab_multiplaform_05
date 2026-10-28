@@ -1,47 +1,7 @@
-// Chi chua StyleSheet/hang so dung lai, khong co component. Man hinh truyen vao prop `style`,
-// `contentStyle`, `outlineStyle`, `underlineStyle` cua Paper.
+// Helper styling phu hop voi React Native Paper MD3 mac dinh.
 import {StyleSheet} from 'react-native';
-import {colors} from './colors';
-import {radius, touchTarget} from './metrics';
+import {touchTarget} from './metrics';
 
-export const flatStyles = StyleSheet.create({
-  // O nhap phang: nen xam dac, bo 16, cao 52. Dung voi mode="outlined" + outlineStyle={flatStyles.inputOutline}.
-  input: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: radius.control,
-    minHeight: 52,
-  },
-  // Vien trong suot 2px luc nghi; focus/loi do Paper to mau (outlineColor/activeOutlineColor).
-  inputOutline: {
-    borderRadius: radius.control,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  // Noi dung nut cao 48dp (prop contentStyle).
+export const componentStyles = StyleSheet.create({
   buttonContent: {height: touchTarget},
-  // Goc nut bo 16 (prop style).
-  buttonShape: {borderRadius: radius.control},
-  // The trang bo 24, khong vien, khong bong.
-  card: {
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: radius.card,
-    elevation: 0,
-    shadowOpacity: 0,
-  },
-  // Hop thoai: Paper nhan roundness x7 (=112) thanh vien thuoc; dat ro bo 24 nhu the.
-  dialog: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: radius.card,
-  },
-  // Chip/search/badge dang pill.
-  pill: {borderRadius: radius.full},
 });
-
-// Props Paper khong dat duoc bang theme: spread vao <TextInput {...flatInputProps} />.
-export const flatInputProps = {
-  mode: 'outlined' as const,
-  outlineColor: 'transparent',
-  activeOutlineColor: colors.primary,
-  outlineStyle: flatStyles.inputOutline,
-  style: flatStyles.input,
-};

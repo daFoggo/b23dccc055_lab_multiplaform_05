@@ -407,7 +407,7 @@ Nguồn: https://m3.material.io/foundations/designing/color-contrast ; /structur
 | Segmented buttons | Nhóm nút có góc ngoài bo full, chọn: nền `secondaryContainer` + dấu check; dùng cho sắp xếp | `src/components/ui/segmented-buttons.tsx`, `src/features/tasks/components/sort-toggle.tsx` |
 | FAB (extended) | Nền `primaryContainer`, chữ `onPrimaryContainer`, cao 56, bo `large` 16, elevation level 3 (6dp), icon `add` + nhãn "Thêm việc" | `src/components/ui/fab.tsx` |
 | Snackbar | Nền `inverseSurface`, chữ `inverseOnSurface`, bo 4, `minHeight` 48, tự tắt sau 2500 ms, `accessibilityLiveRegion="polite"`, một snackbar mỗi lần, tránh safe area; chưa có nút hành động | `src/components/ui/snackbar.tsx` |
-| Icon | `react-native-vector-icons` font MaterialIcons (không phải Material Symbols), mặc định 20dp, màu `onSurfaceVariant` | `src/components/ui/icon.tsx` |
+| Icon | `react-native-vector-icons` font MaterialCommunityIcons (mặc định của react-native-paper), mặc định 20dp, màu `onSurfaceVariant` | `src/components/ui/icon.tsx` |
 | Screen, safe area, keyboard | `SafeAreaView` (edges trái, phải, dưới), nền `surface`; khi cuộn bọc `KeyboardAvoidingView` + `ScrollView` | `src/components/ui/screen-container.tsx` |
 | Empty/loading state | Icon 56dp + tiêu đề + mô tả; `ActivityIndicator` màu `primary` | `src/components/states/` |
 | App bar | Header mặc định của native-stack, nền `surface`, chữ `onSurface` (không dựng app bar riêng) | `src/navigation/root-navigator.tsx` |
@@ -479,4 +479,4 @@ Các mục dưới đây được ghi "không đọc được" trong file nghiê
 - `/foundations/accessible-design/accessibility-basics` và `/patterns`: 404.
 - Hướng dẫn riêng về **error message**, **empty state**, giọng văn (tone), độ dài nhãn nút.
 - Trang `/foundations/interaction/states/overview` liệt kê **6** trạng thái (không phải 7): Enabled, Disabled, Hover, Focused, Pressed, Dragged.
-- Cách React Native nhận Material Symbols variable font (weight, fill, grade): chưa xác minh. App dùng MaterialIcons font cũ.
+- Cách React Native nhận Material Symbols variable font (weight, fill, grade): chưa xác minh. App dùng MaterialCommunityIcons (chuẩn Paper MD3).

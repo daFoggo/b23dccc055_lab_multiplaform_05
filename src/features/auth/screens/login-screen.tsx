@@ -7,11 +7,19 @@ import {
   TextInput as RNTextInput,
   View,
 } from 'react-native';
-import { Button, HelperText, Text, TextInput } from 'react-native-paper';
+import {
+  Avatar,
+  Button,
+  HelperText,
+  Text,
+  TextInput,
+  useTheme,
+} from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { loginUser, mapAuthError } from '../../../services/auth-service';
-import { flatInputProps, flatStyles } from '../../../theme/component-styles';
 import { icons } from '../../../theme/icons';
+import { spacing } from '../../../theme/metrics';
 import type { RootStackParamList } from '../../../navigation/types';
 import { validateLogin } from '../validation';
 
@@ -19,6 +27,7 @@ type TextInputRef = React.ComponentRef<typeof RNTextInput>;
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export function LoginScreen({ navigation }: Props) {
+  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,6 +38,7 @@ export function LoginScreen({ navigation }: Props) {
   const [formError, setFormError] = useState<string | null>(null);
   const passwordRef = useRef<TextInputRef>(null);
   const mounted = useRef(true);
+
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -66,108 +76,159 @@ export function LoginScreen({ navigation }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <SafeAreaView
+      style={[styles.flex, { backgroundColor: theme.colors.background }]}
+      edges={['top', 'bottom']}
     >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Text variant="headlineMedium" style={styles.title}>
-          Đăng nhập
-        </Text>
-        <TextInput
-          {...flatInputProps}
-          testID="login-email"
-          label="Email"
-          value={email}
-          onChangeText={t => {
-            setEmail(t);
-            setDirty(d => ({ ...d, email: true }));
-            setFormError(null);
-          }}
-          onBlur={() => dirty.email && setTouched(t => ({ ...t, email: true }))}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          autoComplete="email"
-          textContentType="emailAddress"
-          returnKeyType="next"
-          onSubmitEditing={() => passwordRef.current?.focus()}
-          error={showEmailError}
-          disabled={submitting}
-        />
-        <HelperText type="error" visible={showEmailError}>
-          {errors.email}
-        </HelperText>
-        <TextInput
-          {...flatInputProps}
-          testID="login-password"
-          ref={passwordRef}
-          label="Mật khẩu"
-          value={password}
-          onChangeText={t => {
-            setPassword(t);
-            setDirty(d => ({ ...d, password: true }));
-            setFormError(null);
-          }}
-          onBlur={() =>
-            dirty.password && setTouched(t => ({ ...t, password: true }))
-          }
-          secureTextEntry={!showPassword}
-          autoComplete="password"
-          textContentType="password"
-          autoCapitalize="none"
-          returnKeyType="done"
-          onSubmitEditing={submit}
-          error={showPasswordError}
-          disabled={submitting}
-          right={
-            <TextInput.Icon
-              icon={showPassword ? icons.eyeOff : icons.eye}
-              accessibilityLabel={
-                showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
-              }
-              onPress={() => setShowPassword(s => !s)}
-            />
-          }
-        />
-        <HelperText type="error" visible={showPasswordError}>
-          {errors.password}
-        </HelperText>
-        <HelperText type="error" visible={!!formError} style={styles.formError}>
-          {formError}
-        </HelperText>
-        <Button
-          testID="login-submit"
-          mode="contained"
-          onPress={submit}
-          loading={submitting}
-          disabled={submitting}
-          style={flatStyles.buttonShape}
-          contentStyle={flatStyles.buttonContent}
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
         >
-          Đăng nhập
-        </Button>
-        <View style={styles.link}>
-          <Button
-            mode="text"
-            onPress={() => navigation.navigate('Register')}
+          <View style={styles.header}>
+            <Avatar.Icon
+              size={64}
+              icon={icons.chat}
+              style={{ backgroundColor: theme.colors.primaryContainer }}
+              color={theme.colors.onPrimaryContainer}
+            />
+            <Text variant="headlineMedium" style={styles.title}>
+              Đăng nhập
+            </Text>
+            <Text
+              variant="bodyLarge"
+              style={{ color: theme.colors.onSurfaceVariant }}
+            >
+              Chào mừng bạn đến với ChatApp
+            </Text>
+          </View>
+
+          <TextInput
+            mode="outlined"
+            testID="login-email"
+            label="Email"
+            value={email}
+            onChangeText={t => {
+              setEmail(t);
+              setDirty(d => ({ ...d, email: true }));
+              setFormError(null);
+            }}
+            onBlur={() => dirty.email && setTouched(t => ({ ...t, email: true }))}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            autoComplete="email"
+            textContentType="emailAddress"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
+            error={showEmailError}
             disabled={submitting}
+            left={<TextInput.Icon icon={icons.email} />}
+            style={styles.input}
+          />
+          <HelperText type="error" visible={showEmailError}>
+            {errors.email}
+          </HelperText>
+
+          <TextInput
+            mode="outlined"
+            testID="login-password"
+            ref={passwordRef}
+            label="Mật khẩu"
+            value={password}
+            onChangeText={t => {
+              setPassword(t);
+              setDirty(d => ({ ...d, password: true }));
+              setFormError(null);
+            }}
+            onBlur={() =>
+              dirty.password && setTouched(t => ({ ...t, password: true }))
+            }
+            secureTextEntry={!showPassword}
+            autoComplete="password"
+            textContentType="password"
+            autoCapitalize="none"
+            returnKeyType="done"
+            onSubmitEditing={submit}
+            error={showPasswordError}
+            disabled={submitting}
+            left={<TextInput.Icon icon={icons.lock} />}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? icons.eyeOff : icons.eye}
+                accessibilityLabel={
+                  showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
+                }
+                onPress={() => setShowPassword(s => !s)}
+              />
+            }
+            style={styles.input}
+          />
+          <HelperText type="error" visible={showPasswordError}>
+            {errors.password}
+          </HelperText>
+
+          <HelperText type="error" visible={!!formError} style={styles.formError}>
+            {formError}
+          </HelperText>
+
+          <Button
+            testID="login-submit"
+            mode="contained"
+            icon={icons.login}
+            onPress={submit}
+            loading={submitting}
+            disabled={submitting}
+            style={styles.submitButton}
           >
-            Chưa có tài khoản? Đăng ký
+            Đăng nhập
           </Button>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+          <View style={styles.link}>
+            <Button
+              mode="text"
+              onPress={() => navigation.navigate('Register')}
+              disabled={submitting}
+            >
+              Chưa có tài khoản? Đăng ký
+            </Button>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-  title: { marginBottom: 24 },
-  formError: { marginBottom: 8 },
-  link: { alignItems: 'center', marginTop: 16 },
+  content: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xl,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing.xxl,
+  },
+  title: {
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  input: {
+    marginBottom: spacing.xs,
+  },
+  formError: {
+    marginBottom: spacing.sm,
+  },
+  submitButton: {
+    marginTop: spacing.sm,
+  },
+  link: {
+    marginTop: spacing.lg,
+    alignItems: 'center',
+  },
 });

@@ -1,5 +1,5 @@
-// Bang mau theo vai tro M3 (seed #6750A4) nhung be mat trung tinh kieu wattprint:
-// nen trang xam #F4F4F4, the trang (chenh mau thay cho vien/bong), o nhap xam dac.
+// Bang mau Material Design 3 mac dinh cua React Native Paper (MD3LightTheme).
+// Dong bo hoan toan giua built-in Paper components va cac component tu tao.
 
 export const colors = {
   primary: '#6750A4',
@@ -11,29 +11,35 @@ export const colors = {
   secondaryContainer: '#E8DEF8',
   onSecondaryContainer: '#1D192B',
   tertiary: '#7D5260',
+  onTertiary: '#FFFFFF',
+  tertiaryContainer: '#FFD8E4',
+  onTertiaryContainer: '#31111D',
   error: '#B3261E',
   onError: '#FFFFFF',
   errorContainer: '#F9DEDC',
   onErrorContainer: '#410E0B',
-  surface: '#F4F4F4',
-  onSurface: '#1C1B1F',
-  onSurfaceVariant: '#5F5F63',
+  background: '#FFFBFE',
+  onBackground: '#1D1B20',
+  surface: '#FFFBFE',
+  onSurface: '#1D1B20',
+  surfaceVariant: '#E7E0EC',
+  onSurfaceVariant: '#49454F',
   surfaceContainerLowest: '#FFFFFF',
-  surfaceContainerLow: '#FFFFFF',
-  surfaceContainer: '#F0F0F0',
-  surfaceContainerHigh: '#ECEEED',
-  surfaceContainerHighest: '#E0E3E1',
+  surfaceContainerLow: '#F7F2FA',
+  surfaceContainer: '#F3EDF7',
+  surfaceContainerHigh: '#ECE6F0',
+  surfaceContainerHighest: '#E6E0E9',
   outline: '#79747E',
-  outlineVariant: '#E0E3E1',
-  inverseSurface: '#322F35',
-  inverseOnSurface: '#F5EFF7',
+  outlineVariant: '#CAC4D0',
+  inverseSurface: '#313033',
+  inverseOnSurface: '#F4EFF4',
   scrim: '#000000',
-  // Chat: trang thai online va bong bong tin nhan.
+  // Chat: trang thai online va bong bong tin nhan dong bo voi MD3 tokens.
   online: '#2E9D57',
   bubbleMine: '#6750A4',
   onBubbleMine: '#FFFFFF',
-  bubbleOther: '#FFFFFF',
-  onBubbleOther: '#1C1B1F',
+  bubbleOther: '#E7E0EC',
+  onBubbleOther: '#49454F',
 } as const;
 
 // Palette avatar (mau on dinh theo uid), chu trang doc duoc tren moi mau.

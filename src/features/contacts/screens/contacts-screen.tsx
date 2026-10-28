@@ -2,7 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
-import { Avatar, List, Searchbar, Text, useTheme } from 'react-native-paper';
+import {
+  Avatar,
+  Divider,
+  List,
+  Searchbar,
+  Text,
+  useTheme,
+} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/auth-context';
 import { useUsers } from '../hooks/use-users';
@@ -10,7 +17,6 @@ import { avatarColor, initials } from '../../../lib/avatar';
 import { filterUsers, sortContacts } from '../../../lib/filter-users';
 import { formatLastSeen } from '../../../lib/format-time';
 import { colors } from '../../../theme/colors';
-import { flatStyles } from '../../../theme/component-styles';
 import { spacing, touchTarget } from '../../../theme/metrics';
 import type { RootStackParamList } from '../../../navigation/types';
 import type { UserProfile } from '../../../services/types';
@@ -90,7 +96,10 @@ export function ContactsScreen() {
     : 'Chưa có ai khác đăng ký';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={['top']}
+    >
       <Text variant="titleLarge" style={styles.title}>
         Danh bạ
       </Text>
@@ -100,12 +109,12 @@ export function ContactsScreen() {
         value={query}
         onChangeText={setQuery}
         style={styles.search}
-        inputStyle={styles.searchInput}
       />
       <FlatList
         data={data}
         keyExtractor={item => item.uid}
         renderItem={renderItem}
+        ItemSeparatorComponent={Divider}
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           <Text
@@ -123,17 +132,22 @@ export function ContactsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  title: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  title: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
   search: {
-    ...flatStyles.pill,
-    backgroundColor: colors.surfaceContainerHigh,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.sm,
-    elevation: 0,
   },
-  searchInput: { minHeight: 0 },
-  row: { minHeight: touchTarget + spacing.lg, paddingHorizontal: spacing.lg },
-  avatarWrap: { justifyContent: 'center', marginRight: spacing.sm },
+  row: {
+    minHeight: touchTarget + spacing.lg,
+    paddingHorizontal: spacing.lg,
+  },
+  avatarWrap: {
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
   dot: {
     position: 'absolute',
     right: 0,
@@ -143,5 +157,8 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     borderWidth: 2,
   },
-  empty: { textAlign: 'center', marginTop: spacing.xxl },
+  empty: {
+    textAlign: 'center',
+    marginTop: spacing.xxl,
+  },
 });

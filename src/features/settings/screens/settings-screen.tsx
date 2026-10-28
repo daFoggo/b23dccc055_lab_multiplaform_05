@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import {
   Avatar,
   Button,
+  Card,
   Dialog,
   List,
   Portal,
   Snackbar,
-  Surface,
   Text,
   useTheme,
 } from 'react-native-paper';
@@ -18,11 +18,20 @@ import { avatarColor, initials } from '../../../lib/avatar';
 import { APP_VERSION } from '../../../config/app-info';
 import { icons } from '../../../theme/icons';
 import { colors } from '../../../theme/colors';
-import { flatStyles } from '../../../theme/component-styles';
 import { spacing } from '../../../theme/metrics';
 
 const renderInfoIcon = (props: { color: string; style?: object }) => (
   <List.Icon {...props} icon={icons.info} />
+);
+
+const avatarFor = (name: string, uid: string) => (props: { size: number }) => (
+  <Avatar.Text
+    {...props}
+    size={56}
+    label={initials(name)}
+    style={{ backgroundColor: avatarColor(uid) }}
+    color={colors.onPrimary}
+  />
 );
 
 export function SettingsScreen() {
@@ -73,50 +82,53 @@ export function SettingsScreen() {
       <Text variant="titleLarge" style={styles.title}>
         Cài đặt
       </Text>
-      <Surface style={[flatStyles.card, styles.account]}>
-        <Avatar.Text
-          size={56}
-          label={initials(user?.name ?? '')}
-          style={{ backgroundColor: avatarColor(user?.uid ?? '') }}
-          color={colors.onPrimary}
+
+      <Card mode="elevated" style={styles.card}>
+        <Card.Title
+          title={user?.name ?? ''}
+          subtitle={user?.email ?? ''}
+          titleVariant="titleMedium"
+          subtitleVariant="bodyMedium"
+          left={avatarFor(user?.name ?? '', user?.uid ?? '')}
+          style={styles.cardTitle}
         />
-        <View style={styles.accountText}>
-          <Text variant="titleMedium">{user?.name}</Text>
-          <Text
-            variant="bodyMedium"
-            style={{ color: theme.colors.onSurfaceVariant }}
-          >
-            {user?.email}
-          </Text>
-        </View>
-      </Surface>
-      <Surface style={flatStyles.card}>
+      </Card>
+
+      <Card mode="contained" style={styles.card}>
         <List.Item
           title="Phiên bản"
           description={APP_VERSION}
           left={renderInfoIcon}
         />
-      </Surface>
+      </Card>
+
       <Button
         testID="logout-button"
         accessibilityLabel="Đăng xuất"
         mode="outlined"
         icon={icons.logout}
         textColor={theme.colors.error}
-        style={[flatStyles.buttonShape, { borderColor: theme.colors.error }]}
-        contentStyle={flatStyles.buttonContent}
+        style={[styles.logoutBtn, { borderColor: theme.colors.error }]}
         onPress={() => setConfirmOpen(true)}
       >
         Đăng xuất
       </Button>
+
       <Portal>
         <Dialog
           visible={confirmOpen}
-          style={flatStyles.dialog}
           dismissable={!loading}
           onDismiss={dismiss}
         >
-          <Dialog.Title>Đăng xuất khỏi tài khoản?</Dialog.Title>
+          <Dialog.Icon icon={icons.logout} color={theme.colors.error} />
+          <Dialog.Title style={styles.dialogTitle}>
+            Đăng xuất khỏi tài khoản?
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">
+              Bạn có chắc chắn muốn đăng xuất khỏi ChatApp?
+            </Text>
+          </Dialog.Content>
           <Dialog.Actions>
             <Button
               testID="logout-cancel"
@@ -139,7 +151,7 @@ export function SettingsScreen() {
         <Snackbar
           visible={failed}
           onDismiss={() => setFailed(false)}
-          duration={4000}
+          duration={3000}
         >
           Đăng xuất thất bại. Thử lại.
         </Snackbar>
@@ -149,13 +161,23 @@ export function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: spacing.lg, gap: spacing.lg },
-  title: { marginBottom: spacing.sm },
-  account: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    gap: spacing.lg,
+  container: {
+    flex: 1,
+    paddingHorizontal: spacing.lg,
   },
-  accountText: { flex: 1 },
+  title: {
+    paddingVertical: spacing.md,
+  },
+  card: {
+    marginBottom: spacing.md,
+  },
+  cardTitle: {
+    paddingVertical: spacing.xs,
+  },
+  logoutBtn: {
+    marginTop: spacing.md,
+  },
+  dialogTitle: {
+    textAlign: 'center',
+  },
 });

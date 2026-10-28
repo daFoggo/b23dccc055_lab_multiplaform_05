@@ -20,6 +20,17 @@ jest.mock('../conversations-context', () => ({
 const mockCtx = useConversationsContext as jest.Mock;
 const now = Date.now();
 
+let current: ReactTestRenderer.ReactTestRenderer | undefined;
+afterEach(() => {
+  mockNavigate.mockReset();
+  if (current) {
+    act(() => {
+      current?.unmount();
+    });
+    current = undefined;
+  }
+});
+
 function render() {
   let r!: ReactTestRenderer.ReactTestRenderer;
   act(() => {
@@ -36,10 +47,9 @@ function render() {
       </SafeAreaProvider>,
     );
   });
+  current = r;
   return r;
 }
-
-beforeEach(() => mockNavigate.mockReset());
 
 it('renders rows with name, preview, badge and navigates on press', () => {
   mockCtx.mockReturnValue({

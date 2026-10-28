@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
-import { Avatar, List, Text, useTheme } from 'react-native-paper';
+import { Avatar, Divider, List, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { icons } from '../../../theme/icons';
 import { colors } from '../../../theme/colors';
@@ -120,6 +120,7 @@ export function NotificationsScreen() {
         data={items}
         keyExtractor={n => String(n.id)}
         renderItem={renderItem}
+        ItemSeparatorComponent={Divider}
         ListEmptyComponent={
           <Text
             variant="bodyMedium"

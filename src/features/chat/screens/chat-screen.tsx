@@ -211,7 +211,7 @@ export function ChatScreen({ route, navigation }: Props) {
             style={[
               styles.day,
               {
-                backgroundColor: colors.surfaceContainerHigh,
+                backgroundColor: theme.colors.surfaceVariant,
                 color: theme.colors.onSurfaceVariant,
               },
             ]}
@@ -227,7 +227,7 @@ export function ChatScreen({ route, navigation }: Props) {
           senderName={peerName}
         />
       ),
-    [myUid, retry, peerName, theme.colors.onSurfaceVariant],
+    [myUid, retry, peerName, theme.colors.onSurfaceVariant, theme.colors.surfaceVariant],
   );
 
   const bottomPad = { paddingBottom: keyboardVisible ? 0 : insets.bottom };
@@ -242,7 +242,7 @@ export function ChatScreen({ route, navigation }: Props) {
 
   return (
     // Bottom inset only while the keyboard is hidden (it already covers it).
-    <View style={[styles.container, bottomPad]}>
+    <View style={[styles.container, bottomPad, { backgroundColor: theme.colors.background }]}>
       {/* Edge-to-edge Android ignores adjustResize, so pad on both platforms. */}
       <KeyboardAvoidingView
         style={styles.container}

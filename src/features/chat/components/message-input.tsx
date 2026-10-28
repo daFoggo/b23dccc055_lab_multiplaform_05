@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { IconButton, TextInput } from 'react-native-paper';
+import { StyleSheet } from 'react-native';
+import { IconButton, Surface, TextInput, useTheme } from 'react-native-paper';
 import { icons } from '../../../theme/icons';
 import { canSend } from '../../../lib/messages';
 import { MAX_MESSAGE_LENGTH } from '../../../services/chat-service';
-import { colors } from '../../../theme/colors';
 import {
   radius,
   spacing,
@@ -23,6 +22,7 @@ export function MessageInput({
   onPressLocation,
   locating = false,
 }: Props) {
+  const theme = useTheme();
   const [text, setText] = useState('');
   const enabled = canSend(text);
 
@@ -35,7 +35,10 @@ export function MessageInput({
   };
 
   return (
-    <View style={styles.container}>
+    <Surface
+      elevation={2}
+      style={[styles.container, { backgroundColor: theme.colors.surface }]}
+    >
       {onPressLocation ? (
         <IconButton
           testID="location-button"
@@ -51,16 +54,17 @@ export function MessageInput({
       <TextInput
         testID="message-input"
         accessibilityLabel="Nhập tin nhắn"
-        mode="flat"
+        mode="outlined"
         multiline
         placeholder="Nhắn tin"
         value={text}
         onChangeText={setText}
         maxLength={MAX_MESSAGE_LENGTH}
-        underlineColor="transparent"
-        activeUnderlineColor="transparent"
-        underlineStyle={styles.noUnderline}
-        style={styles.input}
+        outlineStyle={styles.inputOutline}
+        style={[
+          styles.input,
+          { backgroundColor: theme.colors.surfaceVariant },
+        ]}
         dense
       />
       <IconButton
@@ -68,14 +72,14 @@ export function MessageInput({
         icon={icons.send}
         size={24}
         mode="contained"
-        containerColor={colors.primary}
-        iconColor={colors.onPrimary}
+        containerColor={theme.colors.primary}
+        iconColor={theme.colors.onPrimary}
         disabled={!enabled}
         style={styles.button}
         accessibilityLabel="Gửi"
         onPress={submit}
       />
-    </View>
+    </Surface>
   );
 }
 
@@ -94,13 +98,10 @@ const styles = StyleSheet.create({
     flex: 1,
     maxHeight: MAX_INPUT_HEIGHT,
     minHeight: touchTarget,
-    backgroundColor: colors.surfaceContainerHigh,
-    borderTopLeftRadius: radius.extraLarge,
-    borderTopRightRadius: radius.extraLarge,
-    borderBottomLeftRadius: radius.extraLarge,
-    borderBottomRightRadius: radius.extraLarge,
-    overflow: 'hidden',
   },
-  noUnderline: { display: 'none' },
+  inputOutline: {
+    borderRadius: radius.extraLarge,
+    borderColor: 'transparent',
+  },
   button: { width: touchTarget, height: touchTarget, margin: 0 },
 });

@@ -7,6 +7,8 @@ import {
   Avatar,
   Badge,
   Button,
+  Card,
+  Divider,
   List,
   Text,
   useTheme,
@@ -28,7 +30,6 @@ import type { ConversationSummary } from '../../../services/types';
 
 type Nav = NavigationProp<RootStackParamList & TabParamList>;
 
-// Icon/avatar sizes used by this screen (single place to tweak).
 const AVATAR_SIZE = 48;
 const PREVIEW_ICON_SIZE = 16;
 const BADGE_SIZE = 20;
@@ -155,29 +156,39 @@ function HomeEmpty() {
     );
   }
   return (
-    <View style={styles.empty}>
-      <Text variant="titleMedium" style={styles.emptyText}>
-        Chưa có cuộc trò chuyện nào
-      </Text>
-      <Text
-        variant="bodyMedium"
-        style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}
-      >
-        Vào Danh bạ để bắt đầu trò chuyện với ai đó.
-      </Text>
-      <Button
-        testID="go-contacts"
-        mode="contained-tonal"
-        style={styles.emptyButton}
-        onPress={() => navigation.navigate('Contacts')}
-      >
-        Mở Danh bạ
-      </Button>
-    </View>
+    <Card mode="contained" style={styles.emptyCard}>
+      <Card.Content style={styles.emptyContent}>
+        <Avatar.Icon
+          size={56}
+          icon={icons.tabChat}
+          style={{ backgroundColor: theme.colors.primaryContainer }}
+          color={theme.colors.onPrimaryContainer}
+        />
+        <Text variant="titleMedium" style={styles.emptyTitle}>
+          Chưa có cuộc trò chuyện nào
+        </Text>
+        <Text
+          variant="bodyMedium"
+          style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}
+        >
+          Vào Danh bạ để bắt đầu trò chuyện với ai đó.
+        </Text>
+        <Button
+          testID="go-contacts"
+          mode="contained-tonal"
+          icon={icons.tabContacts}
+          style={styles.emptyButton}
+          onPress={() => navigation.navigate('Contacts')}
+        >
+          Mở Danh bạ
+        </Button>
+      </Card.Content>
+    </Card>
   );
 }
 
 export function HomeScreen() {
+  const theme = useTheme();
   const navigation = useNavigation<Nav>();
   const { conversations } = useConversationsContext();
   const [now, setNow] = useState(() => Date.now());
@@ -213,7 +224,10 @@ export function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={['top']}
+    >
       <Text variant="titleLarge" style={styles.title}>
         Trò chuyện
       </Text>
@@ -221,6 +235,7 @@ export function HomeScreen() {
         data={conversations}
         keyExtractor={item => item.peerId}
         renderItem={renderItem}
+        ItemSeparatorComponent={Divider}
         ListEmptyComponent={HomeEmpty}
       />
     </SafeAreaView>
@@ -229,13 +244,50 @@ export function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  title: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  row: { minHeight: touchTarget + spacing.lg, paddingHorizontal: spacing.lg },
-  avatarWrap: { justifyContent: 'center', marginRight: spacing.sm },
-  previewRow: { flexDirection: 'row', alignItems: 'center' },
-  right: { alignItems: 'flex-end', justifyContent: 'center', gap: spacing.xs },
-  badge: { alignSelf: 'flex-end' },
-  empty: { alignItems: 'center', marginTop: spacing.xxl },
-  emptyText: { textAlign: 'center' },
-  emptyButton: { marginTop: spacing.lg },
+  title: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  row: {
+    minHeight: touchTarget + spacing.lg,
+    paddingHorizontal: spacing.lg,
+  },
+  avatarWrap: {
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  previewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  right: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  badge: {
+    alignSelf: 'flex-end',
+  },
+  empty: {
+    alignItems: 'center',
+    marginTop: spacing.xxl,
+  },
+  emptyCard: {
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.xxl,
+  },
+  emptyContent: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+  },
+  emptyTitle: {
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  emptyText: {
+    textAlign: 'center',
+  },
+  emptyButton: {
+    marginTop: spacing.lg,
+  },
 });

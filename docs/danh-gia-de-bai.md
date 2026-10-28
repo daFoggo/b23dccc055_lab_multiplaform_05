@@ -1,30 +1,46 @@
-# Đối chiếu đề bài Bài 5
+# Đối chiếu đề bài Bài thực hành 5
 
-Trạng thái: "chưa làm" cho đến khi Task 13 cập nhật. Đường dẫn là file dự kiến (theo spec mục 6.4).
+Bảng đối chiếu từng yêu cầu trong đề bài Bài 5 với mã nguồn và kiểm thử thực tế của dự án `ChatApp`.
 
-| Mục | Yêu cầu của đề | File chịu trách nhiệm | Trạng thái |
-|---|---|---|---|
-| 1 | Tạo project Firebase, bật Email/Password và Realtime Database, áp dụng luật | `docs/firebase-setup.md`, `docs/firebase-rules.json` | chưa làm |
-| 1 | Màn hình Đăng ký: họ tên, email, mật khẩu (>= 6 ký tự), nhập lại mật khẩu | `src/features/auth/` (màn Register, validation) | chưa làm |
-| 1 | Đăng nhập bằng Firebase; sai tài khoản/mật khẩu thì báo lỗi | `src/services/auth-service.ts`, `src/features/auth/` (màn Login) | chưa làm |
-| 1 | Đăng xuất ở Cài đặt, quay về Đăng nhập | `src/features/settings/`, `src/features/auth/auth-context.tsx` | chưa làm |
-| 2 | Danh sách người dùng đã đăng ký, không gồm bản thân | `src/services/user-service.ts`, `src/features/contacts/` | chưa làm |
-| 2 | Trạng thái online/offline theo thời gian thực | `src/services/presence-service.ts`, `src/features/contacts/` | chưa làm |
-| 2 | Ô tìm kiếm; nhấn một người để mở Chat | `src/features/contacts/` | chưa làm |
-| 3 | Gửi/nhận tin ngay lập tức, không tải lại | `src/services/chat-service.ts`, `src/features/chat/` (hook nghe tin) | chưa làm |
-| 3 | Tin của mình bên phải, của người kia bên trái, có thời gian | `src/features/chat/` (bong bóng), `src/lib/format-time.ts` | chưa làm |
-| 3 | Không gửi tin rỗng; tự cuộn xuống tin mới nhất | `src/features/chat/` | chưa làm |
-| 3 | Tiêu đề hiển thị tên và trạng thái online của người đang chat | `src/features/chat/` (header) | chưa làm |
-| 4 | Nút 📍 gửi vị trí; xin quyền; từ chối thì thông báo | `src/services/location-service.ts`, `src/features/chat/` | chưa làm |
-| 4 | Tin vị trí hiển thị khác; nhấn mở Google Maps đúng tọa độ | `src/features/chat/components/` (thẻ vị trí) | chưa làm |
-| 5 | Home: ảnh đại diện, tên, tin cuối, thời gian; mới nhất trên cùng | `src/features/home/` | chưa làm |
-| 5 | Số chưa đọc tăng ngay khi có tin mới, về 0 khi mở cuộc trò chuyện | `src/services/chat-service.ts`, `src/features/home/` | chưa làm |
-| 6 | React Native CLI (không Expo) và React Navigation | `package.json`, `src/navigation/` | chưa làm |
-| 6 | Firebase JS SDK (`firebase/auth`, `firebase/database`), `@react-native-community/geolocation` | `src/services/` | chưa làm |
-| 6 | Gom code Firebase vào `src/services/` | `src/services/` | chưa làm |
-| 6 | Hủy lắng nghe trong cleanup của `useEffect` | hook trong `src/features/*` | chưa làm |
-| 6 | Màn hình Thông báo giữ như Bài 4 | `src/features/notifications/` | chưa làm |
-| 7 | Mã nguồn (không kèm `node_modules`, `android/build`, `ios/Pods`) | toàn repo, `.gitignore` | chưa làm |
-| 7 | Ảnh chụp: Đăng ký, Home có chưa đọc, Danh bạ online, Chat có tin thường và vị trí | `docs/firebase-setup.md` (danh sách ảnh) | chưa làm |
-| 7 | Ảnh Firebase Console (tab Data) cho thấy tin nhắn | `docs/firebase-setup.md` | chưa làm |
-| 7 | Video 1-2 phút, 2 máy chat với nhau | do người dùng thực hiện | chưa làm |
+| Mục | Yêu cầu của đề | File chịu trách nhiệm | Kiểm thử tự động (Unit/Integration Test) | Trạng thái |
+|:---:|---|---|---|:---:|
+| **1** | Tạo project Firebase, bật Email/Password và Realtime Database, áp dụng luật | `src/services/firebase-config.ts`, `docs/firebase-rules.json`, `firebase.json` | Đã deploy luật qua `firebase deploy --only database` | **Đã xong** |
+| **1** | Màn hình Đăng ký: họ tên, email, mật khẩu (>= 6 ký tự), nhập lại mật khẩu | `src/features/auth/screens/register-screen.tsx`, `validation.ts` | `register-screen.test.tsx`, `validation.test.ts` (100% pass) | **Đã xong** |
+| **1** | Đăng nhập bằng Firebase; sai tài khoản/mật khẩu thì báo lỗi tiếng Việt | `src/services/auth-service.ts`, `src/features/auth/screens/login-screen.tsx` | `login-screen.test.tsx`, `auth-service.test.ts` | **Đã xong** |
+| **1** | Đăng xuất ở Cài đặt, có hộp thoại xác nhận, quay về Đăng nhập | `src/features/settings/screens/settings-screen.tsx`, `root-navigator.tsx` | `settings-screen.test.tsx`, `navigation.test.tsx` | **Đã xong** |
+| **2** | Danh sách người dùng đã đăng ký, loại trừ bản thân | `src/services/user-service.ts`, `src/features/contacts/screens/contacts-screen.tsx` | `user-service.test.ts`, `contacts-screen.test.tsx` | **Đã xong** |
+| **2** | Trạng thái online/offline theo thời gian thực (kèm thời gian hoạt động gần nhất) | `src/services/presence-service.ts`, `src/lib/format-time.ts` | `presence-service.test.ts`, `format-time.test.ts` | **Đã xong** |
+| **2** | Ô tìm kiếm người dùng (không phân biệt hoa/thường, dấu); nhấn mở Chat 1-1 | `src/lib/filter-users.ts`, `src/features/contacts/screens/contacts-screen.tsx` | `filter-users.test.ts`, `contacts-screen.test.tsx` | **Đã xong** |
+| **3** | Gửi/nhận tin nhắn tức thì theo thời gian thực, không cần tải lại | `src/services/chat-service.ts`, `src/features/chat/hooks/use-messages.ts` | `chat-service.test.ts`, `use-messages.test.tsx` | **Đã xong** |
+| **3** | Tin của mình bên phải, của người khác bên trái, có thời gian gửi | `src/features/chat/components/message-bubble.tsx`, `src/theme/colors.ts` | `message-bubble.test.tsx` | **Đã xong** |
+| **3** | Không cho gửi tin rỗng / khoảng trắng; tự cuộn xuống tin mới nhất | `src/lib/messages.ts`, `src/features/chat/screens/chat-screen.tsx` | `messages.test.ts`, `chat-screen.test.tsx` | **Đã xong** |
+| **3** | Tiêu đề màn hình hiển thị tên và trạng thái online/offline của bạn chat | `src/features/chat/screens/chat-screen.tsx`, `use-peer.ts` | `chat-screen.test.tsx` | **Đã xong** |
+| **4** | Nút 📍 gửi vị trí; xin quyền vị trí; từ chối quyền thì thông báo rõ ràng | `src/services/location-service.ts`, `src/features/chat/screens/chat-screen.tsx` | `location-service.test.ts`, `chat-screen.test.tsx` | **Đã xong** |
+| **4** | Tin vị trí hiển thị khác biệt; nhấn mở Google Maps đúng tọa độ | `src/features/chat/components/location-bubble.tsx`, `src/lib/maps.ts` | `location-bubble.test.tsx`, `maps.test.ts` | **Đã xong** |
+| **5** | Home: avatar, tên, xem trước tin cuối, thời gian; cuộc trò chuyện mới nhất trên cùng | `src/features/home/screens/home-screen.tsx`, `src/services/chat-service.ts` | `home-screen.test.tsx`, `chat-service.test.ts` | **Đã xong** |
+| **5** | Số tin chưa đọc tăng ngay khi có tin mới; tự động về 0 khi mở cuộc trò chuyện | `src/services/chat-service.ts`, `conversations-context.tsx`, `tab-navigator.tsx` | `conversations-context.test.tsx`, `navigation.test.tsx` | **Đã xong** |
+| **6** | React Native CLI (không dùng Expo) và React Navigation | `package.json`, `android/`, `ios/`, `src/navigation/` | `App.test.tsx`, `navigation.test.tsx` | **Đã xong** |
+| **6** | Firebase JS SDK (`firebase/auth`, `firebase/database`), `@react-native-community/geolocation` | `package.json`, `src/services/` | Đã cấu hình và kiểm thử | **Đã xong** |
+| **6** | Gom mã nguồn Firebase vào `src/services/` (không rải rác ngoài màn hình) | `src/services/` | Kiểm tra grep không còn `firebase/` ngoài `src/services/` | **Đã xong** |
+| **6** | Hủy lắng nghe realtime trong cleanup của `useEffect` | Tất cả hooks trong `src/features/*/hooks` | `use-messages.test.tsx`, `use-conversations.test.tsx` | **Đã xong** |
+| **6** | Màn hình Thông báo giữ theo cấu trúc Bài 4 | `src/features/notifications/screens/notifications-screen.tsx` | `notifications-screen.test.tsx` | **Đã xong** |
+| **6** | Revert design system về gốc default React Native Paper MD3, composition chuẩn, font Inter | `src/theme/paper-theme.ts`, `colors.ts`, các màn hình trong `src/features/` | `paper-theme.test.ts`, `theme.test.ts` | **Đã xong** |
+| **7** | Mã nguồn sạch (loại trừ `node_modules`, `android/build`, `.git` khi nộp) | `.gitignore` | Sạch theo chuẩn | **Đã xong** |
+
+---
+
+## Danh sách công việc người dùng thực hiện khi nộp bài
+
+1. **Chụp ảnh màn hình ứng dụng**:
+   - [ ] Ảnh 1: Màn hình Đăng ký tài khoản mới.
+   - [ ] Ảnh 2: Màn hình Home (Trò chuyện) có hiển thị badge số tin chưa đọc.
+   - [ ] Ảnh 3: Màn hình Danh bạ hiển thị người dùng khác với chấm xanh online.
+   - [ ] Ảnh 4: Màn hình Chat có cả tin nhắn văn bản và tin nhắn vị trí (LocationBubble).
+2. **Chụp ảnh màn hình Firebase Console**:
+   - [ ] Ảnh tab **Data** trong Firebase Realtime Database hiển thị các node `users`, `chats`, `userChats`.
+   - [ ] Ảnh tab **Authentication** hiển thị danh sách người dùng đã đăng ký.
+3. **Quay video demo (1 - 2 phút)**:
+   - [ ] Sử dụng 2 thiết bị (hoặc 2 máy ảo emulator) đăng nhập 2 tài khoản khác nhau (`user1@gmail.com` và `user2@gmail.com`).
+   - [ ] Chat 1-1 qua lại: gửi tin nhắn văn bản, thấy tin nhắn xuất hiện tức thì bên máy kia.
+   - [ ] Gửi vị trí: nhấn nút 📍, gửi tin vị trí và bấm mở Google Maps.
+   - [ ] Kiểm tra số tin chưa đọc tăng lên ở máy nhận và giảm về 0 khi mở xem.

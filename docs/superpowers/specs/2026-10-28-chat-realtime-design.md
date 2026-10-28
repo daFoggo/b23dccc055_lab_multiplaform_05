@@ -56,7 +56,7 @@ Lý do: bài nộp chấm theo đề; base cũ chứa code Planner không còn d
 - `src/theme/paper-theme.ts` (mới): dựng `MD3LightTheme` từ token: `colors` (primary, secondaryContainer, surface = `#F4F4F4`, surfaceVariant/ô nhập = `surfaceContainerHigh`, error…), `fonts` (Inter theo từng độ đậm, vì Android chọn đậm theo tên file), `roundness` (16).
 - `src/theme/component-styles.ts` (mới): chỉ là **StyleSheet/hằng số** dùng lại (ví dụ style ô nhập phẳng, nội dung nút cao 48, thẻ bo 24), không phải component. Màn hình truyền vào prop `style`/`contentStyle`/`outlineStyle` của Paper. Ngoại lệ có chủ ý: chỉ khi một chỉnh sửa không đạt được bằng theme hoặc style hằng số thì mới tạo component riêng, và ghi lý do vào `docs/design-style.md`.
 - Điều hướng: `NavigationContainer` dùng theme của React Navigation lấy từ `adaptNavigationTheme` (Paper) để header/nền khớp.
-- Icon: `react-native-vector-icons` (MaterialIcons) như cũ, là peer của Paper.
+- Icon: `react-native-vector-icons` (MaterialCommunityIcons - mặc định của Paper).
 
 ### 6.2 Điều hướng và màn hình
 - Chưa đăng nhập: `Login`, `Register` (native-stack).
