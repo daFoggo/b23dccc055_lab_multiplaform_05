@@ -11,10 +11,6 @@ import { paperTheme } from '../../../theme/paper-theme';
 jest.mock('../../../services/firebase', () => ({ auth: {}, db: {} }));
 jest.mock('../../auth/auth-context', () => ({ useAuth: jest.fn() }));
 jest.mock('../hooks/use-messages', () => ({ useMessages: jest.fn() }));
-jest.mock('@react-native-community/geolocation', () => ({
-  __esModule: true,
-  default: {},
-}));
 jest.mock('../hooks/use-peer', () => ({ usePeer: jest.fn() }));
 jest.mock('@react-navigation/elements', () => ({ useHeaderHeight: () => 56 }));
 jest.mock(

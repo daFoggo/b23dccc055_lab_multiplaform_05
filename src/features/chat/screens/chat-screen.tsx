@@ -126,6 +126,12 @@ export function ChatScreen({ route, navigation }: Props) {
     message: string;
     settings: boolean;
   } | null>(null);
+  // Keep the last message so the text doesn't blank during the fade-out.
+  const [lastSnack, setLastSnack] = useState<{
+    message: string;
+    settings: boolean;
+  } | null>(null);
+  const shownSnack = snack ?? lastSnack;
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -149,14 +155,15 @@ export function ChatScreen({ route, navigation }: Props) {
       listRef.current?.scrollToOffset({ offset: 0, animated: true });
     } catch (e) {
       if (mountedRef.current) {
-        setSnack(
+        const next =
           e instanceof LocationPermissionError
             ? {
                 message: 'Cần cấp quyền vị trí để gửi vị trí.',
                 settings: true,
               }
-            : { message: 'Không lấy được vị trí.', settings: false },
-        );
+            : { message: 'Không lấy được vị trí.', settings: false };
+        setLastSnack(next);
+        setSnack(next);
       }
     } finally {
       locatingRef.current = false;
@@ -270,7 +277,7 @@ export function ChatScreen({ route, navigation }: Props) {
         onDismiss={() => setSnack(null)}
         duration={5000}
         action={
-          snack?.settings
+          shownSnack?.settings
             ? {
                 label: 'Cài đặt',
                 accessibilityLabel: 'Cài đặt',
@@ -281,7 +288,7 @@ export function ChatScreen({ route, navigation }: Props) {
             : undefined
         }
       >
-        {snack?.message ?? ''}
+        {shownSnack?.message ?? ''}
       </Snackbar>
     </View>
   );

@@ -14,9 +14,11 @@ type Props = {
   label: string;
   // Whole-bubble retry is handled by the parent when the message failed.
   disabled?: boolean;
+  // Wrapped by a retry Pressable that already applies the max width.
+  fill?: boolean;
 };
 
-export function LocationBubble({ message, mine, label, disabled }: Props) {
+export function LocationBubble({ message, mine, label, disabled, fill }: Props) {
   const theme = useTheme();
   const failed = message.failed === true;
   const background = failed
@@ -53,6 +55,7 @@ export function LocationBubble({ message, mine, label, disabled }: Props) {
       elevation={0}
       style={[
         styles.bubble,
+        fill ? styles.fill : null,
         mine ? styles.bubbleMine : styles.bubbleOther,
         { backgroundColor: background },
         message.pending ? styles.pending : null,
@@ -114,6 +117,7 @@ const styles = StyleSheet.create({
   },
   bubbleMine: { borderBottomRightRadius: radius.extraSmall },
   bubbleOther: { borderBottomLeftRadius: radius.extraSmall },
+  fill: { maxWidth: '100%' },
   pending: { opacity: 0.6 },
   press: { gap: spacing.sm },
   card: {

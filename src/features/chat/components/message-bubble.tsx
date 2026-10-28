@@ -46,6 +46,7 @@ export function MessageBubble({
         mine={mine}
         label={mine ? 'Vị trí của tôi' : `Vị trí của ${senderName}`}
         disabled={wrapped}
+        fill={wrapped}
       />
     ) : (
       <Surface

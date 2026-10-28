@@ -59,3 +59,21 @@ it('shows the retry label for a failed message and retries on press', async () =
   await act(async () => btn.props.onPress());
   expect(onRetry).toHaveBeenCalledWith('m1');
 });
+
+it('fills the retry wrapper for a failed location bubble', async () => {
+  const r = await render(
+    <MessageBubble
+      message={{
+        ...base,
+        type: 'location',
+        lat: 21.03,
+        lng: 105.85,
+        failed: true,
+      }}
+      mine
+      onRetry={jest.fn()}
+    />,
+  );
+  const bubble = r.root.findAllByProps({ testID: 'bubble-m1' })[0];
+  expect(flat(bubble.props.style).maxWidth).toBe('100%');
+});
